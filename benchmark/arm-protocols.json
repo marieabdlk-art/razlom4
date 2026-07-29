@@ -1,0 +1,43 @@
+{
+  "schema": "razlom4-arm-protocols/1",
+  "accounting_rule": "For every task, provider-reported input_tokens plus output_tokens must not exceed 12000. Missing, malformed and over-budget runs remain in the denominator as failures.",
+  "arms": {
+    "single_agent": {
+      "calls": 1,
+      "phases": [
+        {"name": "solve", "parallel_calls": 1, "instruction": "Produce one final structured solution, counterexample analysis and probe predictions."}
+      ]
+    },
+    "best_of_4": {
+      "calls": 5,
+      "phases": [
+        {"name": "blind_proposals", "parallel_calls": 4, "instruction": "Each call independently proposes a final structured solution."},
+        {"name": "selection", "parallel_calls": 1, "instruction": "Choose or reject one anonymized proposal without private oracle access."}
+      ]
+    },
+    "ordinary_debate": {
+      "calls": 9,
+      "phases": [
+        {"name": "proposals", "parallel_calls": 4, "instruction": "Produce four independent proposals without fixed roles."},
+        {"name": "open_critiques", "parallel_calls": 4, "instruction": "Each participant sees and critiques all proposals; authorship is visible."},
+        {"name": "judge", "parallel_calls": 1, "instruction": "A model judge synthesizes one final answer."}
+      ]
+    },
+    "razlom4_no_roles": {
+      "calls": 12,
+      "phases": [
+        {"name": "blind_commit", "parallel_calls": 4, "instruction": "Four agents use the same generic quality function."},
+        {"name": "fracture_and_mutate", "parallel_calls": 4, "instruction": "Apply the RAZLOM-4 mutation protocol without incompatible role objectives."},
+        {"name": "anonymous_guillotine", "parallel_calls": 4, "instruction": "Review non-self candidates; deterministic gates and maximin select the result."}
+      ]
+    },
+    "razlom4_full": {
+      "calls": 12,
+      "phases": [
+        {"name": "blind_role_commit", "parallel_calls": 4, "roles": ["architect", "skeptic", "simplifier", "failure_hunter"]},
+        {"name": "fracture_and_mutate", "parallel_calls": 4, "instruction": "Each fixed role attacks all three foreign proposals, discards one own assumption and creates or rejects one causal mutation."},
+        {"name": "anonymous_guillotine", "parallel_calls": 4, "instruction": "Each role reviews exactly three foreign candidates; deterministic gates and maximin select the result."}
+      ]
+    }
+  }
+}

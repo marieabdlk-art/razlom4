@@ -1,0 +1,280 @@
+{
+  "contract": {
+    "task_id": "support-routing-01",
+    "question": "Как сократить медианное время ответа поддержки на 40% без роста серьёзных ошибок?",
+    "baseline": "Все обращения вручную разбираются общей очередью.",
+    "hard_constraints": [
+      {"id": "C1", "text": "Не нанимать новых сотрудников."},
+      {"id": "C2", "text": "Не увеличивать долю серьёзных ошибочных ответов."},
+      {"id": "C3", "text": "Запустить пилот не позднее чем через 30 дней."}
+    ],
+    "success_tests": [
+      {"id": "T1", "metric": "median_response_time_ratio", "threshold": "<= 0.60"},
+      {"id": "T2", "metric": "severe_error_rate_delta", "threshold": "<= 0"},
+      {"id": "T3", "metric": "launch_days", "threshold": "<= 30"}
+    ],
+    "novelty_scope": "panel"
+  },
+  "proposals": [
+    {
+      "id": "P1",
+      "author_role": "architect",
+      "thesis": "Автоматически генерировать и отправлять ответы на типовые обращения.",
+      "primitives": ["classify_request", "generate_answer", "automatic_send"],
+      "assumptions": ["Исторические обращения репрезентативны для будущих."],
+      "invariant": "Типовое обращение должно ускоряться без участия оператора.",
+      "mechanism": {
+        "input": "новое обращение",
+        "trigger": "классификатор находит типовой класс",
+        "transformation": "LLM генерирует финальный ответ",
+        "state_changed": "обращение переходит в состояние отвечено",
+        "output": "автоматически отправленный ответ",
+        "observable_prediction": "медианное время ответа падает минимум на 40%",
+        "falsifier": "рост серьёзных ошибочных ответов"
+      },
+      "kill_test": "Запустить редкие юридические и платёжные обращения через автоответ."
+    },
+    {
+      "id": "P2",
+      "author_role": "skeptic",
+      "thesis": "Ускорять только после явного человеческого подтверждения каждого ответа.",
+      "primitives": ["risk_rules", "human_review"],
+      "assumptions": ["Все рискованные категории можно заранее перечислить."],
+      "invariant": "Непроверенный необратимый ответ не должен уходить клиенту.",
+      "mechanism": {
+        "input": "черновик ответа",
+        "trigger": "совпадение с правилом риска",
+        "transformation": "оператор подтверждает или отклоняет черновик",
+        "state_changed": "черновик получает человеческий вердикт",
+        "output": "проверенный ответ",
+        "observable_prediction": "ошибки не растут, но ускорение ограничено",
+        "falsifier": "очередь подтверждений становится новым узким местом"
+      },
+      "kill_test": "Измерить задержку при двукратном всплеске нагрузки."
+    },
+    {
+      "id": "P3",
+      "author_role": "simplifier",
+      "thesis": "Использовать короткие статичные макросы по ключевым словам.",
+      "primitives": ["static_macro", "keyword_match"],
+      "assumptions": ["Словарь формулировок обращений стабилен."],
+      "invariant": "Решение должно быть развёрнуто без сложной новой инфраструктуры.",
+      "mechanism": {
+        "input": "текст обращения",
+        "trigger": "найдено известное ключевое слово",
+        "transformation": "выбирается статичный макрос",
+        "state_changed": "обращению назначен готовый текст",
+        "output": "макрос для оператора",
+        "observable_prediction": "типовые ответы готовятся быстрее",
+        "falsifier": "перефразированные запросы систематически пропускаются"
+      },
+      "kill_test": "Перефразировать 100 типовых запросов без исходных ключевых слов."
+    },
+    {
+      "id": "P4",
+      "author_role": "failure_hunter",
+      "thesis": "Генерировать только обратимые черновики и помещать их в аудит-очередь.",
+      "primitives": ["draft_only", "audit_queue"],
+      "assumptions": ["У человеческой очереди есть свободная пропускная способность."],
+      "invariant": "Любое ошибочное действие должно быть обратимо до отправки.",
+      "mechanism": {
+        "input": "новое обращение",
+        "trigger": "черновик создан",
+        "transformation": "черновик помещается в отдельную аудит-очередь",
+        "state_changed": "обращение ожидает аудит",
+        "output": "проверяемый черновик",
+        "observable_prediction": "серьёзные ошибки перехватываются до отправки",
+        "falsifier": "аудит-очередь растёт быстрее обработки"
+      },
+      "kill_test": "Подать тройной всплеск обращений и измерить хвост задержки."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "D1",
+      "author_role": "architect",
+      "source_roles": ["architect", "skeptic", "failure_hunter"],
+      "discarded_self_assumption": "Исторические обращения репрезентативны для будущих.",
+      "shared_hidden_assumption": "Скорость требует немедленного финального ответа.",
+      "mutation_operator": "delay_or_expire",
+      "causal_operator": "confidence_decay_queue",
+      "mechanism": {
+        "input": "машинный черновик с уверенностью",
+        "trigger": "уверенность не подтверждена новым похожим случаем",
+        "transformation": "доверие к шаблону убывает и переводит его в проверку",
+        "state_changed": "статус шаблона меняется с быстрый на требующий аудита",
+        "output": "самоограничивающийся быстрый шаблон",
+        "observable_prediction": "устаревшие шаблоны автоматически покидают быстрый путь",
+        "falsifier": "ошибочные шаблоны остаются активными после смены распределения"
+      },
+      "ablation": "Без убывания уверенности устаревшие шаблоны продолжают автоматически применяться.",
+      "prediction": "Время ответа снизится на 42% без роста серьёзных ошибок.",
+      "experiment": "Двухнедельный shadow-пилот со сменой формулировок запросов.",
+      "experiment_result": "unrun",
+      "rollback": "Отключить быстрый путь и вернуть все шаблоны в аудит.",
+      "simplicity": 0.61,
+      "reversibility": 0.90
+    },
+    {
+      "id": "D2",
+      "author_role": "skeptic",
+      "source_roles": ["architect", "skeptic", "simplifier", "failure_hunter"],
+      "discarded_self_assumption": "Все рискованные категории можно заранее перечислить.",
+      "shared_hidden_assumption": "Автоматизировать можно только создание или подтверждение ответа.",
+      "mutation_operator": "gate",
+      "causal_operator": "uncertainty_reversibility_gate",
+      "mechanism": {
+        "input": "обращение, оценка неопределённости и обратимости",
+        "trigger": "поступление нового обращения",
+        "transformation": "система автоматизирует маршрутизацию по совместному порогу неопределённости и обратимости",
+        "state_changed": "обращение получает режим быстрый, ручной или эскалационный",
+        "output": "маршрут вместо непроверенного финального ответа",
+        "observable_prediction": "обратимые уверенные случаи ускоряются, рискованные не отправляются автоматически",
+        "falsifier": "редкие необратимые случаи систематически попадают в быстрый режим"
+      },
+      "ablation": "Без совместного порога система снова выбирает между медленной ручной обработкой и рискованной автоотправкой.",
+      "prediction": "Медианное время снизится на 45%, а серьёзные ошибки не вырастут.",
+      "experiment": "Replay 2000 обращений, включая 200 редких необратимых случаев, против baseline и автоответа.",
+      "experiment_result": "pass",
+      "rollback": "Направить все три режима обратно в общую ручную очередь.",
+      "simplicity": 0.76,
+      "reversibility": 0.96
+    },
+    {
+      "id": "D3",
+      "author_role": "simplifier",
+      "source_roles": ["architect", "simplifier", "failure_hunter"],
+      "discarded_self_assumption": "Словарь формулировок обращений стабилен.",
+      "shared_hidden_assumption": "Тип запроса можно определить по его словам.",
+      "mutation_operator": "reify",
+      "causal_operator": "exception_density_router",
+      "mechanism": {
+        "input": "поток обращений и число недавних исключений",
+        "trigger": "плотность исключений превышает локальный порог",
+        "transformation": "исключения временно переводят целый маршрут в ручной режим",
+        "state_changed": "режим класса меняется в зависимости от плотности исключений",
+        "output": "маршрут с автоматическим карантином",
+        "observable_prediction": "новые формулировки быстро блокируют ненадёжные макросы",
+        "falsifier": "редкие критические исключения не достигают порога"
+      },
+      "ablation": "Без плотности исключений ненадёжный класс не переходит в карантин.",
+      "prediction": "Время ответа снизится на 41% без роста ошибок.",
+      "experiment": "Replay редких критических случаев с частотой ниже порога.",
+      "experiment_result": "fail",
+      "rollback": "Зафиксировать все маршруты в ручном режиме.",
+      "simplicity": 0.83,
+      "reversibility": 0.91
+    },
+    {
+      "id": "D4",
+      "author_role": "failure_hunter",
+      "source_roles": ["architect", "skeptic", "simplifier", "failure_hunter"],
+      "discarded_self_assumption": "У человеческой очереди есть свободная пропускная способность.",
+      "shared_hidden_assumption": "Очередь оператора является бесплатным запасным выходом.",
+      "mutation_operator": "price_or_budget",
+      "causal_operator": "expiry_budget_escalator",
+      "mechanism": {
+        "input": "обращение и остаток бюджета ручной проверки",
+        "trigger": "исчерпание локального бюджета или срока ожидания",
+        "transformation": "бюджет распределяет аудит, а истечение срока переводит необработанное обращение в быстрый режим",
+        "state_changed": "обращение расходует бюджет или меняет режим после истечения срока",
+        "output": "ограниченная аудит-очередь без бесконечного хвоста",
+        "observable_prediction": "хвост задержки ограничен даже при всплеске",
+        "falsifier": "истечение срока отправляет опасный случай без проверки"
+      },
+      "ablation": "Без бюджета очередь растёт без границы; без срока обращения зависают.",
+      "prediction": "Хвост задержки сократится на 50% при стабильном среднем времени.",
+      "experiment": "Нагрузочный тест с редкими юридическими обращениями у границы срока.",
+      "experiment_result": "pass",
+      "rollback": "Отключить истечение срока и вернуть общую очередь.",
+      "simplicity": 0.67,
+      "reversibility": 0.82
+    }
+  ],
+  "reviews": [
+    {
+      "reviewer_role": "skeptic", "candidate_id": "D1", "hard_failures": [],
+      "kill_test": "Сменить распределение запросов в середине replay.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "В отличие от P1 меняется состояние доверия шаблона.",
+      "distinguishing_test": "Проверить автоматическое выключение устаревшего шаблона.", "role_score": 0.72,
+      "residual_risk": "Начальная уверенность может быть завышена."
+    },
+    {
+      "reviewer_role": "simplifier", "candidate_id": "D1", "hard_failures": [],
+      "kill_test": "Посчитать число новых состояний шаблона.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "P3 не имеет изменяемого доверия или срока жизни.",
+      "distinguishing_test": "Сравнить поведение после дрейфа словаря.", "role_score": 0.68,
+      "residual_risk": "Порог убывания усложняет настройку."
+    },
+    {
+      "reviewer_role": "failure_hunter", "candidate_id": "D1", "hard_failures": [],
+      "kill_test": "Проверить резкий дрейф до накопления новых случаев.", "kill_test_result": "pass",
+      "equivalence_verdict": "uncertain", "aligned_fields": "Может оказаться вариантом expiry-кэша.",
+      "distinguishing_test": "", "role_score": 0.62,
+      "residual_risk": "Защитная реакция запаздывает при резком дрейфе."
+    },
+    {
+      "reviewer_role": "architect", "candidate_id": "D2", "hard_failures": [],
+      "kill_test": "Сравнить скорость с полной автоотправкой.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "P1 автоматизирует ответ, D2 автоматизирует выбор режима.",
+      "distinguishing_test": "Одинаковые обращения провести через автоответ и маршрутизатор.", "role_score": 0.88,
+      "residual_risk": "Часть ускорения зависит от качества быстрых сценариев."
+    },
+    {
+      "reviewer_role": "simplifier", "candidate_id": "D2", "hard_failures": [],
+      "kill_test": "Реализовать три режима без новой экспертной системы.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "Ни P2, ни P3 не используют совместную обратимость и неопределённость.",
+      "distinguishing_test": "Удалить любой из двух сигналов и измерить ошибки.", "role_score": 0.86,
+      "residual_risk": "Два порога потребуют калибровки."
+    },
+    {
+      "reviewer_role": "failure_hunter", "candidate_id": "D2", "hard_failures": [],
+      "kill_test": "Replay редких необратимых случаев.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "P4 проверяет всё, D2 отделяет обратимые случаи до очереди.",
+      "distinguishing_test": "Подать одинаковый всплеск в P4 и D2.", "role_score": 0.84,
+      "residual_risk": "Неизвестный тип необратимости может быть неверно оценён."
+    },
+    {
+      "reviewer_role": "architect", "candidate_id": "D3", "hard_failures": [],
+      "kill_test": "Проверить ускорение на редких исключениях.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "Исходные идеи не используют плотность исключений как состояние.",
+      "distinguishing_test": "Варьировать частоту исключений вокруг порога.", "role_score": 0.55,
+      "residual_risk": "Карантин снижает выигрыш по скорости."
+    },
+    {
+      "reviewer_role": "skeptic", "candidate_id": "D3", "hard_failures": [],
+      "kill_test": "Подать единичный критический случай ниже порога.", "kill_test_result": "fail",
+      "equivalence_verdict": "distinct", "aligned_fields": "Механизм отличается, но прогноз безопасности опровергнут.",
+      "distinguishing_test": "Сравнить единичные и массовые исключения.", "role_score": 0.31,
+      "residual_risk": "Один критический случай не создаёт достаточной плотности."
+    },
+    {
+      "reviewer_role": "failure_hunter", "candidate_id": "D3", "hard_failures": [],
+      "kill_test": "Смешать редкие критические и частые безвредные ошибки.", "kill_test_result": "fail",
+      "equivalence_verdict": "uncertain", "aligned_fields": "Карантин похож на обычный circuit breaker.",
+      "distinguishing_test": "", "role_score": 0.28,
+      "residual_risk": "Плотность не отражает тяжесть исключения."
+    },
+    {
+      "reviewer_role": "architect", "candidate_id": "D4", "hard_failures": [],
+      "kill_test": "Подать тройной всплеск типовых запросов.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "P4 не имеет расходуемого бюджета и срока.",
+      "distinguishing_test": "Сравнить рост хвоста P4 и D4.", "role_score": 0.73,
+      "residual_risk": "Выигрыш зависит от размера бюджета."
+    },
+    {
+      "reviewer_role": "skeptic", "candidate_id": "D4", "hard_failures": ["C2"],
+      "kill_test": "Поместить юридическое обращение точно за границу срока.", "kill_test_result": "fail",
+      "equivalence_verdict": "distinct", "aligned_fields": "Срок принудительно меняет режим, чего нет в P4.",
+      "distinguishing_test": "Проверить исход опасного обращения после истечения срока.", "role_score": 0.20,
+      "residual_risk": "Срок превращает перегрузку в автоматическую серьёзную ошибку."
+    },
+    {
+      "reviewer_role": "simplifier", "candidate_id": "D4", "hard_failures": [],
+      "kill_test": "Посчитать состояния бюджета и срока.", "kill_test_result": "pass",
+      "equivalence_verdict": "distinct", "aligned_fields": "Бюджет является новым изменяемым ресурсом.",
+      "distinguishing_test": "Удалить бюджет и сравнить длину очереди.", "role_score": 0.64,
+      "residual_risk": "Два управляющих механизма сложнее одного."
+    }
+  ]
+}

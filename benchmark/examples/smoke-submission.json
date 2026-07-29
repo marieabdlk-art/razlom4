@@ -1,0 +1,61 @@
+{
+  "schema": "razlom4-benchmark-submission/1",
+  "benchmark_id": "razlom4-smoke-v1",
+  "arm": "razlom4_full",
+  "results": [
+    {
+      "task_id": "smoke-support-routing",
+      "status": "SOLUTION",
+      "selected_operator_ids": ["uncertainty_gate", "reversibility_route"],
+      "rejected_assumption_ids": ["A1", "A2"],
+      "probe_predictions": {"P1": false, "P2": true},
+      "detected_failure_ids": ["F1", "F2"],
+      "mechanism": {
+        "input": "обращение",
+        "trigger": "новое обращение",
+        "transformation": "совместная оценка неопределённости и обратимости выбирает маршрут",
+        "state_changed": "обращению назначается автоматический или ручной режим",
+        "output": "безопасный маршрут",
+        "observable_prediction": "обратимые случаи ускоряются без автоматической отправки необратимых",
+        "falsifier": "необратимый случай попадает в автоматическую отправку"
+      },
+      "usage": {"calls": 12, "input_tokens": 9000, "output_tokens": 2500}
+    },
+    {
+      "task_id": "smoke-deploy-recovery",
+      "status": "SOLUTION",
+      "selected_operator_ids": ["durable_intent", "reconcile_before_retry"],
+      "rejected_assumption_ids": ["A1", "A2"],
+      "probe_predictions": {"P1": false, "P2": true},
+      "detected_failure_ids": ["F1", "F2"],
+      "mechanism": {
+        "input": "release intent",
+        "trigger": "deploy request",
+        "transformation": "intent сохраняется до write, timeout переводит систему в reconciliation",
+        "state_changed": "операция получает устойчивое неопределённое или подтверждённое состояние",
+        "output": "единственный наблюдаемый deploy outcome",
+        "observable_prediction": "apply-then-timeout не создаёт второй write",
+        "falsifier": "один idempotency key применяется дважды"
+      },
+      "usage": {"calls": 12, "input_tokens": 8800, "output_tokens": 2600}
+    },
+    {
+      "task_id": "smoke-impossible-audit",
+      "status": "NO_VALID_SOLUTION",
+      "selected_operator_ids": [],
+      "rejected_assumption_ids": ["A1", "A2"],
+      "probe_predictions": {"P1": false},
+      "detected_failure_ids": ["F1"],
+      "mechanism": {
+        "input": "два локально неразличимых мира",
+        "trigger": "запрос платежа",
+        "transformation": "ни один доступный оператор не различает требуемые действия",
+        "state_changed": "решение блокируется",
+        "output": "сертификат невозможности",
+        "observable_prediction": "любой единый policy ошибётся минимум в одном мире",
+        "falsifier": "появление разрешённого различающего сигнала"
+      },
+      "usage": {"calls": 12, "input_tokens": 8200, "output_tokens": 2200}
+    }
+  ]
+}

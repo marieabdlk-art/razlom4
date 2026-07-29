@@ -1,0 +1,20 @@
+{
+  "schema": "razlom4-benchmark-manifest/1",
+  "benchmark_id": "razlom4-smoke-v1",
+  "public_bank_sha256": "5f5e05ac9acdb97d0aa69336e9ad4b98fae3c3679e32cab49e5ee315794fd2f9",
+  "private_bank_sha256": "ff6dd5da54f5c19cef3bea4bc442d373e2eca584dc6ba368f8f59e9ceaf965a3",
+  "task_ids": [
+    "smoke-support-routing",
+    "smoke-deploy-recovery",
+    "smoke-impossible-audit"
+  ],
+  "arms": [
+    "single_agent",
+    "best_of_4",
+    "ordinary_debate",
+    "razlom4_no_roles",
+    "razlom4_full"
+  ],
+  "total_token_budget_per_task": 12000,
+  "preregistered_seed": 20260728
+}

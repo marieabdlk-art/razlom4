@@ -1,0 +1,36 @@
+{
+  "schema": "razlom4-private-task-bank/1",
+  "benchmark_id": "razlom4-smoke-v1",
+  "tasks": [
+    {
+      "id": "smoke-support-routing",
+      "no_valid_solution": false,
+      "valid_solutions": [
+        {
+          "operator_ids": ["uncertainty_gate", "reversibility_route"],
+          "rejected_assumption_ids": ["A1", "A2"],
+          "probe_outcomes": {"P1": false, "P2": true},
+          "required_failure_ids": ["F1", "F2"]
+        }
+      ]
+    },
+    {
+      "id": "smoke-deploy-recovery",
+      "no_valid_solution": false,
+      "valid_solutions": [
+        {
+          "operator_ids": ["durable_intent", "reconcile_before_retry"],
+          "rejected_assumption_ids": ["A1", "A2"],
+          "probe_outcomes": {"P1": false, "P2": true},
+          "required_failure_ids": ["F1", "F2"]
+        }
+      ]
+    },
+    {
+      "id": "smoke-impossible-audit",
+      "no_valid_solution": true,
+      "valid_solutions": [],
+      "required_failure_ids": ["F1"]
+    }
+  ]
+}

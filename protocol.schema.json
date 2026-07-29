@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/razlom4.schema.json",
+  "title": "РАЗЛОМ-4 session",
+  "type": "object",
+  "required": ["contract", "proposals", "candidates", "reviews"],
+  "properties": {
+    "contract": {"$ref": "#/$defs/contract"},
+    "proposals": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {"$ref": "#/$defs/proposal"}
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {"$ref": "#/$defs/candidate"}
+    },
+    "reviews": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {"$ref": "#/$defs/review"}
+    }
+  },
+  "$defs": {
+    "role": {
+      "enum": ["architect", "skeptic", "simplifier", "failure_hunter"]
+    },
+    "mechanism": {
+      "type": "object",
+      "required": [
+        "input", "trigger", "transformation", "state_changed", "output",
+        "observable_prediction", "falsifier"
+      ],
+      "properties": {
+        "input": {"type": "string", "minLength": 1},
+        "trigger": {"type": "string", "minLength": 1},
+        "transformation": {"type": "string", "minLength": 1},
+        "state_changed": {"type": "string", "minLength": 1},
+        "output": {"type": "string", "minLength": 1},
+        "observable_prediction": {"type": "string", "minLength": 1},
+        "falsifier": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "contract": {
+      "type": "object",
+      "required": [
+        "task_id", "question", "baseline", "hard_constraints",
+        "success_tests", "novelty_scope"
+      ],
+      "properties": {
+        "task_id": {"type": "string", "minLength": 1},
+        "question": {"type": "string", "minLength": 1},
+        "baseline": {"type": "string", "minLength": 1},
+        "hard_constraints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "text"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "text": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "success_tests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "metric", "threshold"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "metric": {"type": "string", "minLength": 1},
+              "threshold": {}
+            }
+          }
+        },
+        "novelty_scope": {"enum": ["panel", "corpus"]},
+        "corpus_description": {"type": "string"}
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "required": [
+        "id", "author_role", "thesis", "primitives", "assumptions",
+        "invariant", "mechanism", "kill_test"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "author_role": {"$ref": "#/$defs/role"},
+        "thesis": {"type": "string", "minLength": 1},
+        "primitives": {
+          "type": "array", "minItems": 1, "items": {"type": "string"}
+        },
+        "assumptions": {
+          "type": "array", "minItems": 1, "items": {"type": "string"}
+        },
+        "invariant": {"type": "string", "minLength": 1},
+        "mechanism": {"$ref": "#/$defs/mechanism"},
+        "kill_test": {"type": "string", "minLength": 1}
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "id", "author_role", "source_roles", "discarded_self_assumption",
+        "shared_hidden_assumption", "mutation_operator", "causal_operator",
+        "mechanism", "ablation", "prediction", "experiment",
+        "experiment_result", "rollback", "simplicity", "reversibility"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "author_role": {"$ref": "#/$defs/role"},
+        "source_roles": {
+          "type": "array", "minItems": 3, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/role"}
+        },
+        "discarded_self_assumption": {"type": "string", "minLength": 1},
+        "shared_hidden_assumption": {"type": "string", "minLength": 1},
+        "mutation_operator": {
+          "enum": [
+            "invert", "gate", "amputate", "transplant", "reify",
+            "delay_or_expire", "price_or_budget"
+          ]
+        },
+        "causal_operator": {"type": "string", "minLength": 1},
+        "mechanism": {"$ref": "#/$defs/mechanism"},
+        "ablation": {"type": "string", "minLength": 1},
+        "prediction": {"type": "string", "minLength": 1},
+        "experiment": {"type": "string", "minLength": 1},
+        "experiment_result": {"enum": ["pass", "fail", "unrun"]},
+        "rollback": {"type": "string", "minLength": 1},
+        "simplicity": {"type": "number", "minimum": 0, "maximum": 1},
+        "reversibility": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": [
+        "reviewer_role", "candidate_id", "hard_failures", "kill_test",
+        "kill_test_result", "equivalence_verdict", "aligned_fields",
+        "distinguishing_test", "role_score", "residual_risk"
+      ],
+      "properties": {
+        "reviewer_role": {"$ref": "#/$defs/role"},
+        "candidate_id": {"type": "string", "minLength": 1},
+        "hard_failures": {
+          "type": "array", "items": {"type": "string"}, "uniqueItems": true
+        },
+        "kill_test": {"type": "string", "minLength": 1},
+        "kill_test_result": {"enum": ["pass", "fail", "unrun"]},
+        "equivalence_verdict": {"enum": ["equivalent", "distinct", "uncertain"]},
+        "aligned_fields": {"type": "string", "minLength": 1},
+        "distinguishing_test": {"type": "string"},
+        "role_score": {"type": "number", "minimum": 0, "maximum": 1},
+        "residual_risk": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
