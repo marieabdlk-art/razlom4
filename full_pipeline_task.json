@@ -1,0 +1,28 @@
+{
+  "task_id": "support-routing-v1",
+  "question": "How can a support system reduce response time without increasing severe errors?",
+  "baseline": "Generate an answer automatically and send uncertain cases to a human reviewer.",
+  "hard_constraints": [
+    {
+      "id": "C1",
+      "text": "Irreversible or legally sensitive actions must not be executed without human approval."
+    },
+    {
+      "id": "C2",
+      "text": "The system must provide a rollback or safe fallback for automated decisions."
+    }
+  ],
+  "success_tests": [
+    {
+      "id": "T1",
+      "metric": "median response time for reversible cases",
+      "threshold": "at least 30% below the baseline"
+    },
+    {
+      "id": "T2",
+      "metric": "severe error rate",
+      "threshold": "no higher than the human-review baseline"
+    }
+  ],
+  "novelty_scope": "panel"
+}

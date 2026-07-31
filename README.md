@@ -54,6 +54,32 @@ The protocol can establish at most `panel_novel`: different from the four
 frozen proposals. Claims of global novelty require a separate literature or
 patent review.
 
+## KUDS → RAZLOM-4 full pipeline
+
+Version 0.2 adds an optional generation layer before the conflict protocol:
+
+```text
+task contract
+  → KUDS baseline snapshot + 12 divergent seeds
+  → deterministic novelty/diversity selection of 4 seeds
+  → 4 blind role commits
+  → conflict + causal mutation
+  → anonymous non-self review
+  → hard gates + maximin
+  → idea dossier or failure certificate
+```
+
+KUDS expands the search space. RAZLOM-4 then tries to break and mutate the
+selected ideas. The combination does not weaken the original protocol: roles
+remain blind during commit, authors still discard a frozen assumption, and the
+existing deterministic validator performs final selection.
+
+The full run uses 13 model calls: one KUDS divergence call plus the original
+three rounds of four calls. The final artifact includes the complete KUDS pool,
+seed-selection scores, protocol session, deterministic selection result, and a
+compact idea dossier. Unexecuted experiments remain explicitly
+`NOVELTY_UNCONFIRMED`.
+
 ## Quick start
 
 RAZLOM-4 has no runtime dependencies and requires Python 3.9+.
@@ -70,6 +96,25 @@ Or install the local CLI:
 python3 -m pip install .
 razlom4 validate example_session.json
 razlom4 select example_session.json
+```
+
+Run the combined pipeline through OpenRouter:
+
+```bash
+export OPENROUTER_API_KEY="..."
+razlom4-full full_pipeline_task.json \
+  --output runs/support-routing.json \
+  --model z-ai/glm-5.1
+```
+
+For reproducible offline runs, pass an ordered response artifact instead of an
+API key:
+
+```bash
+razlom4-full full_pipeline_task.json \
+  --output runs/replayed.json \
+  --candidates 4 \
+  --replay responses.json
 ```
 
 The example selects `uncertainty_reversibility_gate`: instead of compromising
@@ -124,6 +169,9 @@ accuracy advantage over one strong agent. See
 - [`PROMPTS.md`](PROMPTS.md) — role and round prompts.
 - [`protocol.schema.json`](protocol.schema.json) — session artifact schema.
 - [`razlom4.py`](razlom4.py) — validation, hard gates, and selection.
+- [`razlom4_full.py`](razlom4_full.py) — KUDS generation and full orchestration.
+- [`full_pipeline_task.json`](full_pipeline_task.json) — example task contract.
+- [`RAZLOM4_KUDS_GLM51_Colab.ipynb`](RAZLOM4_KUDS_GLM51_Colab.ipynb) — ready-to-run GLM-5.1 Colab notebook.
 - [`example_session.json`](example_session.json) — reproducible example.
 - [`benchmark/`](benchmark/) — blind scorer contracts and smoke bank.
 - [`RAZLOM4_BENCHMARK_PLAN.md`](RAZLOM4_BENCHMARK_PLAN.md) — preregistered evaluation design.

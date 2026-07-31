@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "razlom4-protocol"
-version = "0.1.0"
+version = "0.2.0"
 description = "A falsifiable four-agent conflict protocol with deterministic gates and maximin selection"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -26,6 +26,7 @@ Issues = "https://github.com/marieabdlk-art/razlom4/issues"
 [project.scripts]
 razlom4 = "razlom4:main"
 razlom4-benchmark = "razlom4_benchmark:main"
+razlom4-full = "razlom4_full:main"
 
 [tool.setuptools]
-py-modules = ["razlom4", "razlom4_benchmark"]
+py-modules = ["razlom4", "razlom4_benchmark", "razlom4_full"]
