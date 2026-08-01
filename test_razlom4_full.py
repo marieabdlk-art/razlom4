@@ -267,6 +267,27 @@ class Razlom4FullTests(unittest.TestCase):
         self.assertEqual(reviews[0]["role_score"], 0.75)
         self.assertEqual(reviews[0]["equivalence_verdict"], "uncertain")
 
+        distinct_raw = [
+            {
+                "equivalenceVerdict": "distinct",
+                "distinguishingTest": "A measurable A/B test",
+                "killTest": "Run the falsifier",
+                "killTestResult": "unrun",
+                "roleScore": 0.7,
+                "residualRisk": "Unmeasured interaction effects",
+            }
+            for _ in expected
+        ]
+        distinct_reviews = _normalize_reviews(
+            distinct_raw,
+            reviewer_role="architect",
+            expected_candidates=expected,
+            constraint_ids={"C1", "C2"},
+        )
+        self.assertTrue(
+            all(item["equivalence_verdict"] == "distinct" for item in distinct_reviews)
+        )
+
     def test_text_mechanism_and_qualitative_scores_fail_conservatively(self):
         candidate = _normalize_candidate(
             {

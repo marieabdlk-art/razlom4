@@ -408,9 +408,15 @@ def _normalize_reviews(
 
         if not isinstance(review.get("aligned_fields"), str) or not review["aligned_fields"].strip():
             review["aligned_fields"] = (
-                "Canonical alignment was not supplied; equivalence remains uncertain."
+                "The model omitted the prose alignment; use its explicit equivalence verdict "
+                "together with the supplied distinguishing test."
             )
-            review["equivalence_verdict"] = "uncertain"
+        verdict = review.get("equivalence_verdict")
+        if isinstance(verdict, str):
+            verdict = verdict.casefold()
+        if verdict not in {"equivalent", "distinct", "uncertain"}:
+            verdict = "uncertain"
+        review["equivalence_verdict"] = verdict
         review.setdefault("distinguishing_test", "")
         score = _number(review.get("role_score"))
         if score is not None:
@@ -553,7 +559,7 @@ class FullPipeline:
         selection = select_candidate(session)
         artifact = {
             "method": "kuds_razlom4_full",
-            "version": "0.2.3",
+            "version": "0.2.4",
             "model_calls": 13,
             "kuds": {
                 "baseline_snapshot": kuds["baseline_snapshot"],
