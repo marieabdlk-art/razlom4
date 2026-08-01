@@ -316,6 +316,9 @@ def _normalize_candidate(
     )
     aliases = {
         "canonical_mechanism": "mechanism",
+        "causal_mechanism": "mechanism",
+        "new_mechanism": "mechanism",
+        "mechanism_card": "mechanism",
         "simplicity_score": "simplicity",
         "reversibility_score": "reversibility",
     }
@@ -328,11 +331,26 @@ def _normalize_candidate(
         candidate.setdefault("reversibility", scores.get("reversibility"))
     candidate["id"] = candidate.get("id") or fallback_id
     candidate["author_role"] = role
-    candidate.setdefault("source_roles", list(ROLES))
+    candidate["source_roles"] = list(ROLES)
+
+    mechanism = candidate.get("mechanism")
+    if not isinstance(mechanism, dict):
+        transformation = mechanism if isinstance(mechanism, str) and mechanism.strip() else None
+        transformation = transformation or candidate.get("causal_operator") or candidate.get("title")
+        prediction = candidate.get("prediction")
+        ablation = candidate.get("ablation")
+        candidate["mechanism"] = {
+            "input": candidate.get("input") or "Inputs defined by the task contract",
+            "trigger": candidate.get("trigger") or candidate.get("shared_hidden_assumption") or "Activation condition in the proposed experiment",
+            "transformation": transformation or "Apply the candidate causal operator",
+            "state_changed": candidate.get("state_changed") or candidate.get("causal_operator") or "Decision state governed by the candidate",
+            "output": candidate.get("output") or prediction or "Observable candidate outcome",
+            "observable_prediction": prediction or "The candidate must outperform the registered baseline",
+            "falsifier": ablation or "The registered prediction does not hold under ablation",
+        }
     for field in ("simplicity", "reversibility"):
         parsed = _number(candidate.get(field))
-        if parsed is not None:
-            candidate[field] = max(0.0, min(1.0, parsed))
+        candidate[field] = max(0.0, min(1.0, parsed)) if parsed is not None else 0.0
     return candidate
 
 
@@ -361,6 +379,32 @@ def _normalize_reviews(
         else:
             failures = []
         review["hard_failures"] = failures
+
+        result_aliases = {
+            "passed": "pass",
+            "failed": "fail",
+            "not_run": "unrun",
+            "not run": "unrun",
+            "unknown": "unrun",
+        }
+        kill_result = review.get("kill_test_result")
+        if isinstance(kill_result, str):
+            kill_result = result_aliases.get(kill_result.casefold(), kill_result.casefold())
+        if kill_result not in {"pass", "fail", "unrun"}:
+            kill_result = "unrun"
+        review["kill_test_result"] = kill_result
+        if failures and kill_result != "fail":
+            # An unexecuted or malformed test cannot establish a hard veto.
+            review["hard_failures"] = []
+
+        if not isinstance(review.get("kill_test"), str) or not review["kill_test"].strip():
+            mechanism = candidate.get("mechanism")
+            fallback_test = mechanism.get("falsifier") if isinstance(mechanism, dict) else None
+            review["kill_test"] = (
+                fallback_test
+                or candidate.get("experiment")
+                or "Run the candidate's registered falsifier before accepting this review."
+            )
 
         if not isinstance(review.get("aligned_fields"), str) or not review["aligned_fields"].strip():
             review["aligned_fields"] = (
@@ -509,7 +553,7 @@ class FullPipeline:
         selection = select_candidate(session)
         artifact = {
             "method": "kuds_razlom4_full",
-            "version": "0.2.2",
+            "version": "0.2.3",
             "model_calls": 13,
             "kuds": {
                 "baseline_snapshot": kuds["baseline_snapshot"],
@@ -687,9 +731,16 @@ class OpenRouterProvider:
 class CheckpointProvider:
     """Cache successful stages and their usage so interrupted runs can resume."""
 
-    def __init__(self, provider: JsonProvider, path: str | Path) -> None:
+    def __init__(
+        self,
+        provider: JsonProvider,
+        path: str | Path,
+        *,
+        allow_stale_prefixes: tuple[str, ...] = (),
+    ) -> None:
         self.provider = provider
         self.path = Path(path)
+        self.allow_stale_prefixes = allow_stale_prefixes
         self.data: dict[str, Any] = {"responses": {}, "usage_records": []}
         if self.path.exists():
             loaded = json.loads(self.path.read_text(encoding="utf-8"))
@@ -707,7 +758,9 @@ class CheckpointProvider:
     ) -> dict[str, Any]:
         fingerprint = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         cached = self.data.get("responses", {}).get(stage)
-        if isinstance(cached, dict) and cached.get("prompt_hash") == fingerprint:
+        hash_matches = isinstance(cached, dict) and cached.get("prompt_hash") == fingerprint
+        stale_allowed = any(stage.startswith(prefix) for prefix in self.allow_stale_prefixes)
+        if isinstance(cached, dict) and (hash_matches or stale_allowed):
             response = cached.get("response")
             if isinstance(response, dict):
                 return json.loads(json.dumps(response, ensure_ascii=False))

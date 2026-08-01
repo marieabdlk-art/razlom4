@@ -216,6 +216,15 @@ class Razlom4FullTests(unittest.TestCase):
             self.assertEqual(first, second)
             self.assertEqual(inner.calls, 1)
 
+            resumed = CheckpointProvider(
+                inner,
+                Path(tmp) / "checkpoint.json",
+                allow_stale_prefixes=("stage-",),
+            )
+            stale = resumed.complete_json("changed prompt", stage="stage-1", temperature=0.1)
+            self.assertEqual(stale, first)
+            self.assertEqual(inner.calls, 1)
+
     def test_glm_wrapped_camel_case_cards_are_normalized(self):
         mechanism = load_example()["candidates"][0]["mechanism"]
         raw_candidate = {
@@ -252,9 +261,30 @@ class Razlom4FullTests(unittest.TestCase):
             constraint_ids={"C1", "C2"},
         )
         self.assertEqual([item["candidate_id"] for item in reviews], ["D2", "D3", "D4"])
-        self.assertEqual(reviews[0]["hard_failures"], ["C1"])
+        self.assertEqual(reviews[0]["hard_failures"], [])
+        self.assertEqual(reviews[0]["kill_test_result"], "unrun")
+        self.assertTrue(reviews[0]["kill_test"])
         self.assertEqual(reviews[0]["role_score"], 0.75)
         self.assertEqual(reviews[0]["equivalence_verdict"], "uncertain")
+
+    def test_text_mechanism_and_qualitative_scores_fail_conservatively(self):
+        candidate = _normalize_candidate(
+            {
+                "id": "text-card",
+                "causalOperator": "expire-by-contradiction",
+                "mechanism": "Expire a memory when verified evidence contradicts it.",
+                "prediction": "False-memory persistence falls below baseline.",
+                "ablation": "Without expiration, false memories remain active.",
+                "simplicity": "unknown",
+                "reversibility": "unknown",
+            },
+            role="skeptic",
+            fallback_id="D2",
+        )
+        self.assertIsInstance(candidate["mechanism"], dict)
+        self.assertIn("Expire a memory", candidate["mechanism"]["transformation"])
+        self.assertEqual(candidate["simplicity"], 0.0)
+        self.assertEqual(candidate["reversibility"], 0.0)
 
     def test_cli_can_run_fully_offline_from_replay(self):
         session = load_example()
