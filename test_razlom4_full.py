@@ -8,6 +8,7 @@ from unittest.mock import patch
 from razlom4 import ROLES, validate_session
 from razlom4_full import (
     FullPipeline,
+    CheckpointProvider,
     OpenRouterProvider,
     PipelineError,
     ReplayProvider,
@@ -142,12 +143,76 @@ class Razlom4FullTests(unittest.TestCase):
         request_body = json.loads(mocked.call_args.args[0].data)
         self.assertEqual(request_body["model"], "z-ai/glm-5.1")
         self.assertEqual(request_body["max_tokens"], 3000)
-        self.assertEqual(request_body["reasoning"]["effort"], "low")
+        self.assertEqual(request_body["reasoning"]["effort"], "none")
         summary = provider.usage_summary()
         self.assertEqual(summary["prompt_tokens"], 1000)
         self.assertEqual(summary["completion_tokens"], 500)
         self.assertEqual(summary["reasoning_tokens"], 200)
         self.assertEqual(summary["reported_cost"], 0.004)
+
+    def test_empty_content_retries_without_reasoning(self):
+        payloads = [
+            {
+                "choices": [
+                    {"message": {"content": None}, "finish_reason": "length"}
+                ],
+                "usage": {"prompt_tokens": 100, "completion_tokens": 5000},
+            },
+            {
+                "choices": [
+                    {"message": {"content": '{"recovered": true}'}, "finish_reason": "stop"}
+                ],
+                "usage": {"prompt_tokens": 100, "completion_tokens": 20},
+            },
+        ]
+
+        class Response:
+            def __init__(self, payload):
+                self.payload = payload
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return json.dumps(self.payload).encode("utf-8")
+
+        responses = [Response(payload) for payload in payloads]
+        provider = OpenRouterProvider(api_key="test-key", reasoning_effort="low")
+        with patch("urllib.request.urlopen", side_effect=responses) as mocked:
+            result = provider.complete_json(
+                "prompt", stage="forge:architect", temperature=0.7
+            )
+
+        self.assertEqual(result, {"recovered": True})
+        self.assertEqual(mocked.call_count, 2)
+        retry_body = json.loads(mocked.call_args.args[0].data)
+        self.assertEqual(retry_body["reasoning"]["effort"], "none")
+        self.assertEqual(retry_body["max_tokens"], 7500)
+        self.assertEqual(len(provider.usage_records), 2)
+
+    def test_checkpoint_reuses_successful_stage(self):
+        class CountingProvider:
+            model = "test-model"
+
+            def __init__(self):
+                self.calls = 0
+
+            def complete_json(self, prompt, *, stage, temperature):
+                del prompt, temperature
+                self.calls += 1
+                return {"stage": stage, "call": self.calls}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            inner = CountingProvider()
+            checkpoint = CheckpointProvider(inner, Path(tmp) / "checkpoint.json")
+            first = checkpoint.complete_json("same", stage="stage-1", temperature=0.1)
+            second = checkpoint.complete_json("same", stage="stage-1", temperature=0.1)
+
+            self.assertEqual(first, second)
+            self.assertEqual(inner.calls, 1)
 
     def test_cli_can_run_fully_offline_from_replay(self):
         session = load_example()

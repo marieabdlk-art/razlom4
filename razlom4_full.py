@@ -389,7 +389,7 @@ class FullPipeline:
         selection = select_candidate(session)
         artifact = {
             "method": "kuds_razlom4_full",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "model_calls": 13,
             "kuds": {
                 "baseline_snapshot": kuds["baseline_snapshot"],
@@ -409,7 +409,9 @@ class FullPipeline:
         return artifact
 
 
-def _extract_json(text: str) -> dict[str, Any]:
+def _extract_json(text: Any) -> dict[str, Any]:
+    if not isinstance(text, str) or not text.strip():
+        raise PipelineError("provider returned empty message content")
     stripped = text.strip()
     if stripped.startswith("```"):
         stripped = re.sub(r"^```(?:json)?\s*", "", stripped, flags=re.IGNORECASE)
@@ -435,7 +437,8 @@ class OpenRouterProvider:
     model: str = DEFAULT_MODEL
     base_url: str = "https://openrouter.ai/api/v1/chat/completions"
     timeout: int = 120
-    reasoning_effort: str = "low"
+    reasoning_effort: str = "none"
+    max_retries: int = 1
 
     def __post_init__(self) -> None:
         self.usage_records: list[dict[str, Any]] = []
@@ -451,65 +454,87 @@ class OpenRouterProvider:
     def complete_json(
         self, prompt: str, *, stage: str, temperature: float
     ) -> dict[str, Any]:
-        body = json.dumps(
-            {
-                "model": self.model,
-                "temperature": temperature,
-                "max_tokens": self._max_tokens(stage),
-                "reasoning": {
-                    "effort": self.reasoning_effort,
-                    "exclude": True,
-                },
-                "response_format": {"type": "json_object"},
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are one isolated stage in an auditable ideation protocol.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-            }
-        ).encode("utf-8")
-        request = urllib.request.Request(
-            self.base_url,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "X-Title": "RAZLOM-4 KUDS Pipeline",
-            },
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-            raise PipelineError(f"{stage} provider request failed: {exc}") from exc
-        usage = payload.get("usage") if isinstance(payload, dict) else None
-        if isinstance(usage, dict):
-            details = usage.get("completion_tokens_details") or {}
-            prompt_tokens = int(usage.get("prompt_tokens") or 0)
-            completion_tokens = int(usage.get("completion_tokens") or 0)
-            reported_cost = usage.get("cost")
-            estimated_cost = (
-                prompt_tokens * GLM51_INPUT_USD_PER_MILLION
-                + completion_tokens * GLM51_OUTPUT_USD_PER_MILLION
-            ) / 1_000_000
-            self.usage_records.append(
+        last_error: PipelineError | None = None
+        for attempt in range(self.max_retries + 1):
+            retrying = attempt > 0
+            effort = "none" if retrying else self.reasoning_effort
+            max_tokens = self._max_tokens(stage)
+            if retrying:
+                max_tokens = int(max_tokens * 1.5)
+            body = json.dumps(
                 {
-                    "stage": stage,
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "reasoning_tokens": int(details.get("reasoning_tokens") or 0),
-                    "reported_cost": reported_cost,
-                    "estimated_cost_usd": round(estimated_cost, 8),
+                    "model": self.model,
+                    "temperature": min(temperature, 0.2) if retrying else temperature,
+                    "max_tokens": max_tokens,
+                    "reasoning": {"effort": effort, "exclude": True},
+                    "response_format": {"type": "json_object"},
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "Return one complete, strictly valid JSON object. "
+                                "Do not spend the output budget on hidden reasoning."
+                            ),
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
                 }
+            ).encode("utf-8")
+            request = urllib.request.Request(
+                self.base_url,
+                data=body,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "X-Title": "RAZLOM-4 KUDS Pipeline",
+                },
+                method="POST",
             )
-        try:
-            content = payload["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise PipelineError(f"{stage} provider response has no message content") from exc
-        return _extract_json(content)
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+                raise PipelineError(f"{stage} provider request failed: {exc}") from exc
+
+            try:
+                choice = payload["choices"][0]
+                content = choice["message"].get("content")
+                finish_reason = choice.get("finish_reason")
+            except (KeyError, IndexError, TypeError, AttributeError):
+                content = None
+                finish_reason = None
+
+            usage = payload.get("usage") if isinstance(payload, dict) else None
+            if isinstance(usage, dict):
+                details = usage.get("completion_tokens_details") or {}
+                prompt_tokens = int(usage.get("prompt_tokens") or 0)
+                completion_tokens = int(usage.get("completion_tokens") or 0)
+                reported_cost = usage.get("cost")
+                estimated_cost = (
+                    prompt_tokens * GLM51_INPUT_USD_PER_MILLION
+                    + completion_tokens * GLM51_OUTPUT_USD_PER_MILLION
+                ) / 1_000_000
+                self.usage_records.append(
+                    {
+                        "stage": stage,
+                        "attempt": attempt + 1,
+                        "finish_reason": finish_reason,
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "reasoning_tokens": int(details.get("reasoning_tokens") or 0),
+                        "reported_cost": reported_cost,
+                        "estimated_cost_usd": round(estimated_cost, 8),
+                    }
+                )
+            try:
+                return _extract_json(content)
+            except PipelineError as exc:
+                last_error = PipelineError(
+                    f"{stage} attempt {attempt + 1} returned unusable JSON "
+                    f"(finish_reason={finish_reason!r}): {exc}"
+                )
+        assert last_error is not None
+        raise last_error
 
     def usage_summary(self) -> dict[str, Any]:
         reported = [
@@ -536,6 +561,82 @@ class OpenRouterProvider:
                 "output_including_reasoning": GLM51_OUTPUT_USD_PER_MILLION,
             },
             "stages": self.usage_records,
+        }
+
+
+class CheckpointProvider:
+    """Cache successful stages and their usage so interrupted runs can resume."""
+
+    def __init__(self, provider: JsonProvider, path: str | Path) -> None:
+        self.provider = provider
+        self.path = Path(path)
+        self.data: dict[str, Any] = {"responses": {}, "usage_records": []}
+        if self.path.exists():
+            loaded = json.loads(self.path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                self.data.update(loaded)
+
+    def _save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(
+            json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    def complete_json(
+        self, prompt: str, *, stage: str, temperature: float
+    ) -> dict[str, Any]:
+        fingerprint = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+        cached = self.data.get("responses", {}).get(stage)
+        if isinstance(cached, dict) and cached.get("prompt_hash") == fingerprint:
+            response = cached.get("response")
+            if isinstance(response, dict):
+                return json.loads(json.dumps(response, ensure_ascii=False))
+
+        records = getattr(self.provider, "usage_records", None)
+        before = len(records) if isinstance(records, list) else 0
+        try:
+            response = self.provider.complete_json(
+                prompt, stage=stage, temperature=temperature
+            )
+        finally:
+            records = getattr(self.provider, "usage_records", None)
+            if isinstance(records, list) and len(records) > before:
+                self.data.setdefault("usage_records", []).extend(records[before:])
+                self._save()
+        self.data.setdefault("responses", {})[stage] = {
+            "prompt_hash": fingerprint,
+            "response": response,
+        }
+        self._save()
+        return response
+
+    def usage_summary(self) -> dict[str, Any]:
+        records = self.data.get("usage_records", [])
+        reported = [
+            float(item["reported_cost"])
+            for item in records
+            if isinstance(item.get("reported_cost"), (int, float))
+        ]
+        return {
+            "model": getattr(self.provider, "model", None),
+            "requests": len(records),
+            "cached_stages": len(self.data.get("responses", {})),
+            "prompt_tokens": sum(int(item.get("prompt_tokens") or 0) for item in records),
+            "completion_tokens": sum(
+                int(item.get("completion_tokens") or 0) for item in records
+            ),
+            "reasoning_tokens": sum(
+                int(item.get("reasoning_tokens") or 0) for item in records
+            ),
+            "reported_cost": round(sum(reported), 8) if reported else None,
+            "estimated_cost_usd": round(
+                sum(float(item.get("estimated_cost_usd") or 0) for item in records), 8
+            ),
+            "pricing_assumption_usd_per_million": {
+                "input": GLM51_INPUT_USD_PER_MILLION,
+                "output_including_reasoning": GLM51_OUTPUT_USD_PER_MILLION,
+            },
+            "stages": records,
         }
 
 
