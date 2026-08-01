@@ -268,6 +268,113 @@ def _anonymize(records: list[dict[str, Any]], *, hide: set[str]) -> list[dict[st
     ]
 
 
+def _snake_key(key: str) -> str:
+    key = key.replace("-", "_").replace(" ", "_")
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", key).casefold()
+
+
+def _normalize_keys(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {_snake_key(str(key)): _normalize_keys(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_normalize_keys(item) for item in value]
+    return value
+
+
+def _unwrap_card(value: dict[str, Any], names: set[str]) -> dict[str, Any]:
+    normalized = _normalize_keys(value)
+    for name in names:
+        nested = normalized.get(name)
+        if isinstance(nested, dict):
+            return nested
+    if len(normalized) == 1:
+        nested = next(iter(normalized.values()))
+        if isinstance(nested, dict):
+            return nested
+    return normalized
+
+
+def _number(value: Any) -> float | None:
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        match = re.search(r"-?\d+(?:\.\d+)?", value)
+        if match:
+            parsed = float(match.group())
+            if parsed > 1 and parsed <= 100:
+                parsed /= 100
+            return parsed
+    return None
+
+
+def _normalize_candidate(
+    raw: dict[str, Any], *, role: str, fallback_id: str
+) -> dict[str, Any]:
+    candidate = _unwrap_card(
+        raw,
+        {"candidate", "delta_candidate", "deltacandidate", "mutation"},
+    )
+    aliases = {
+        "canonical_mechanism": "mechanism",
+        "simplicity_score": "simplicity",
+        "reversibility_score": "reversibility",
+    }
+    for source, target in aliases.items():
+        if target not in candidate and source in candidate:
+            candidate[target] = candidate[source]
+    scores = candidate.get("scores")
+    if isinstance(scores, dict):
+        candidate.setdefault("simplicity", scores.get("simplicity"))
+        candidate.setdefault("reversibility", scores.get("reversibility"))
+    candidate["id"] = candidate.get("id") or fallback_id
+    candidate["author_role"] = role
+    candidate.setdefault("source_roles", list(ROLES))
+    for field in ("simplicity", "reversibility"):
+        parsed = _number(candidate.get(field))
+        if parsed is not None:
+            candidate[field] = max(0.0, min(1.0, parsed))
+    return candidate
+
+
+def _normalize_reviews(
+    raw_reviews: list[Any],
+    *,
+    reviewer_role: str,
+    expected_candidates: list[dict[str, Any]],
+    constraint_ids: set[str],
+) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
+    for index, (raw, candidate) in enumerate(zip(raw_reviews, expected_candidates)):
+        if not isinstance(raw, dict):
+            raise PipelineError(f"review:{reviewer_role}[{index}] must be an object")
+        review = _unwrap_card(raw, {"review", "candidate_review", "assessment"})
+        review["reviewer_role"] = reviewer_role
+        # The input and output arrays are positionally bound. This prevents a
+        # model typo from producing duplicate or forbidden reviewer pairs.
+        review["candidate_id"] = candidate["id"]
+
+        failures = review.get("hard_failures", [])
+        if isinstance(failures, str):
+            failures = [item for item in constraint_ids if item in failures]
+        elif isinstance(failures, list):
+            failures = [item for item in failures if isinstance(item, str) and item in constraint_ids]
+        else:
+            failures = []
+        review["hard_failures"] = failures
+
+        if not isinstance(review.get("aligned_fields"), str) or not review["aligned_fields"].strip():
+            review["aligned_fields"] = (
+                "Canonical alignment was not supplied; equivalence remains uncertain."
+            )
+            review["equivalence_verdict"] = "uncertain"
+        review.setdefault("distinguishing_test", "")
+        score = _number(review.get("role_score"))
+        if score is not None:
+            review["role_score"] = max(0.0, min(1.0, score))
+        normalized.append(review)
+    return normalized
+
+
 def build_idea_dossier(
     session: dict[str, Any], selection: dict[str, Any]
 ) -> dict[str, Any] | None:
@@ -341,11 +448,12 @@ class FullPipeline:
             )
             if not isinstance(proposal, dict):
                 raise PipelineError(f"proposal:{role} must return an object")
+            proposal = _unwrap_card(proposal, {"proposal", "proposal_card", "proposalcard"})
             proposal["author_role"] = role
             proposals.append(proposal)
 
         candidates: list[dict[str, Any]] = []
-        for role in ROLES:
+        for role_index, role in enumerate(ROLES, 1):
             own = next(item for item in proposals if item["author_role"] == role)
             foreign = [item for item in proposals if item["author_role"] != role]
             anonymous = _anonymize(foreign, hide={"author_role"})
@@ -356,10 +464,19 @@ class FullPipeline:
             )
             if not isinstance(candidate, dict):
                 raise PipelineError(f"forge:{role} must return an object")
-            candidate["author_role"] = role
+            candidate = _normalize_candidate(
+                candidate, role=role, fallback_id=f"D{role_index}"
+            )
+            if any(existing["id"] == candidate["id"] for existing in candidates):
+                candidate["id"] = f"D{role_index}"
             candidates.append(candidate)
 
         reviews: list[dict[str, Any]] = []
+        constraint_ids = {
+            item["id"]
+            for item in contract["hard_constraints"]
+            if isinstance(item, dict) and isinstance(item.get("id"), str)
+        }
         for role in ROLES:
             non_self = [item for item in candidates if item["author_role"] != role]
             anonymous = _anonymize(non_self, hide={"author_role"})
@@ -371,11 +488,14 @@ class FullPipeline:
             role_reviews = response.get("reviews") if isinstance(response, dict) else None
             if not isinstance(role_reviews, list) or len(role_reviews) != 3:
                 raise PipelineError(f"review:{role} must return exactly three reviews")
-            for review in role_reviews:
-                if not isinstance(review, dict):
-                    raise PipelineError(f"review:{role} entries must be objects")
-                review["reviewer_role"] = role
-            reviews.extend(role_reviews)
+            reviews.extend(
+                _normalize_reviews(
+                    role_reviews,
+                    reviewer_role=role,
+                    expected_candidates=non_self,
+                    constraint_ids=constraint_ids,
+                )
+            )
 
         session = {
             "contract": contract,
@@ -389,7 +509,7 @@ class FullPipeline:
         selection = select_candidate(session)
         artifact = {
             "method": "kuds_razlom4_full",
-            "version": "0.2.1",
+            "version": "0.2.2",
             "model_calls": 13,
             "kuds": {
                 "baseline_snapshot": kuds["baseline_snapshot"],

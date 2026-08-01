@@ -12,6 +12,8 @@ from razlom4_full import (
     OpenRouterProvider,
     PipelineError,
     ReplayProvider,
+    _normalize_candidate,
+    _normalize_reviews,
     main,
     score_and_select_seeds,
 )
@@ -213,6 +215,46 @@ class Razlom4FullTests(unittest.TestCase):
 
             self.assertEqual(first, second)
             self.assertEqual(inner.calls, 1)
+
+    def test_glm_wrapped_camel_case_cards_are_normalized(self):
+        mechanism = load_example()["candidates"][0]["mechanism"]
+        raw_candidate = {
+            "deltaCandidate": {
+                "id": "wrapped",
+                "canonicalMechanism": mechanism,
+                "simplicityScore": "80%",
+                "reversibilityScore": "0.65",
+            }
+        }
+        candidate = _normalize_candidate(
+            raw_candidate, role="architect", fallback_id="D1"
+        )
+        self.assertEqual(candidate["mechanism"], mechanism)
+        self.assertEqual(candidate["simplicity"], 0.8)
+        self.assertEqual(candidate["reversibility"], 0.65)
+        self.assertEqual(set(candidate["source_roles"]), set(ROLES))
+
+        expected = [{"id": "D2"}, {"id": "D3"}, {"id": "D4"}]
+        raw_reviews = [
+            {
+                "candidateReview": {
+                    "candidateId": "duplicate",
+                    "hardFailures": "C1 and unknown C9",
+                    "roleScore": "75%",
+                }
+            }
+            for _ in expected
+        ]
+        reviews = _normalize_reviews(
+            raw_reviews,
+            reviewer_role="architect",
+            expected_candidates=expected,
+            constraint_ids={"C1", "C2"},
+        )
+        self.assertEqual([item["candidate_id"] for item in reviews], ["D2", "D3", "D4"])
+        self.assertEqual(reviews[0]["hard_failures"], ["C1"])
+        self.assertEqual(reviews[0]["role_score"], 0.75)
+        self.assertEqual(reviews[0]["equivalence_verdict"], "uncertain")
 
     def test_cli_can_run_fully_offline_from_replay(self):
         session = load_example()
