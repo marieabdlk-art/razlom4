@@ -72,6 +72,13 @@ razlom4-full full_pipeline_task.json \
 
 Готовый ноутбук для Google Colab: [`RAZLOM4_KUDS_GLM51_Colab.ipynb`](RAZLOM4_KUDS_GLM51_Colab.ipynb).
 
+Отдельный результат HDC case study — исполнимое ядро когнитивной архитектуры:
+[`HDC-architecture-spec-v3.md`](HDC-architecture-spec-v3.md),
+[`hdc_cognitive.py`](hdc_cognitive.py) и
+[`HDC_COGNITIVE_V3_Colab.ipynb`](HDC_COGNITIVE_V3_Colab.ipynb).
+[Открыть HDC-прототип в Google Colab](https://colab.research.google.com/github/marieabdlk-art/razlom4/blob/main/HDC_COGNITIVE_V3_Colab.ipynb).
+Он не использует API или платные модели и сравнивает HDC с n-граммным baseline.
+
 В репозитории также есть слепой benchmark harness для сравнения single agent,
 best-of-4, обычного debate, РАЗЛОМ-4 без ролей и полного протокола при одинаковом
 токен-бюджете.

@@ -172,6 +172,8 @@ accuracy advantage over one strong agent. See
 - [`razlom4_full.py`](razlom4_full.py) — KUDS generation and full orchestration.
 - [`full_pipeline_task.json`](full_pipeline_task.json) — example task contract.
 - [`RAZLOM4_KUDS_GLM51_Colab.ipynb`](RAZLOM4_KUDS_GLM51_Colab.ipynb) — ready-to-run GLM-5.1 Colab notebook.
+- [`HDC-architecture-spec-v3.md`](HDC-architecture-spec-v3.md) — implementable reference specification produced by the HDC case study.
+- [`hdc_cognitive.py`](hdc_cognitive.py) and [`HDC_COGNITIVE_V3_Colab.ipynb`](HDC_COGNITIVE_V3_Colab.ipynb) — API-free runnable HDC core and Colab benchmark against an n-gram baseline ([open in Colab](https://colab.research.google.com/github/marieabdlk-art/razlom4/blob/main/HDC_COGNITIVE_V3_Colab.ipynb)).
 - [`example_session.json`](example_session.json) — reproducible example.
 - [`benchmark/`](benchmark/) — blind scorer contracts and smoke bank.
 - [`RAZLOM4_BENCHMARK_PLAN.md`](RAZLOM4_BENCHMARK_PLAN.md) — preregistered evaluation design.
