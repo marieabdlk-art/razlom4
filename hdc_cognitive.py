@@ -148,6 +148,7 @@ class OutcomeTable:
 class Prototype:
     record_id: int
     key_hv: np.ndarray
+    semantic_key_hv: np.ndarray | None = None
     outcomes: OutcomeTable = field(default_factory=OutcomeTable)
     support: int = 0
     created_tick: int = 0
@@ -210,16 +211,17 @@ class Hormones:
             "two_ag": 0.10,
         }
         release = {
-            "dopamine": 0.03 if success else 0.0,
-            "serotonin": 0.01 if success and error < 0.25 else 0.0,
-            "cortisol": min(0.05, 0.05 * error),
-            "adrenaline": min(0.05, 0.05 * urgency),
-            "two_ag": min(0.05, 0.05 * loop_score),
+            "dopamine": 0.01 if success else 0.0,
+            "serotonin": 0.005 if success and error < 0.25 else 0.0,
+            "cortisol": min(0.02, 0.02 * error),
+            "adrenaline": min(0.02, 0.02 * urgency),
+            "two_ag": min(0.03, 0.03 * loop_score),
         }
         for name in baseline:
             value = getattr(self, name)
-            value += release[name] - 0.05 * (value - baseline[name])
-            setattr(self, name, min(1.0, max(0.0, value)))
+            value += release[name] - 0.08 * (value - baseline[name])
+            # Anti-windup leaves recovery room in both directions.
+            setattr(self, name, min(0.95, max(0.05, value)))
 
     def memory_gain(self) -> float:
         return max(-0.10, min(0.10, 0.10 * (self.dopamine - self.cortisol)))
@@ -269,6 +271,12 @@ class HDCCognitiveSystem:
         learn_threshold: float = 0.82,
         query_threshold: float = 0.20,
         promotion_support: int = 3,
+        dynamic_semantics: bool = False,
+        positional_binding: bool = True,
+        auto_consolidate: bool = True,
+        semantic_drift_fraction: float = 0.01,
+        neighbor_count: int = 5,
+        stable_key_weight: float = 0.80,
     ) -> None:
         self.encoder = HDCEncoder(dimension, seed)
         self.seed = seed
@@ -279,6 +287,18 @@ class HDCCognitiveSystem:
         self.learn_threshold = learn_threshold
         self.query_threshold = query_threshold
         self.promotion_support = promotion_support
+        self.dynamic_semantics = dynamic_semantics
+        self.positional_binding = positional_binding
+        self.auto_consolidate = auto_consolidate
+        if not 0.0 < semantic_drift_fraction <= 0.02:
+            raise ValueError("semantic_drift_fraction must be in (0, 0.02]")
+        self.semantic_drift_fraction = semantic_drift_fraction
+        if neighbor_count < 1 or neighbor_count > 32:
+            raise ValueError("neighbor_count must be between 1 and 32")
+        self.neighbor_count = neighbor_count
+        if not 0.5 <= stable_key_weight <= 1.0:
+            raise ValueError("stable_key_weight must be in [0.5, 1.0]")
+        self.stable_key_weight = stable_key_weight
         self.epoch = 0
         self.tick = 0
         self._next_record_id = 1
@@ -292,6 +312,7 @@ class HDCCognitiveSystem:
         self.event_log: list[dict[str, object]] = []
         self._snapshots: list[dict[str, object]] = []
         self._recent_predictions: list[str | None] = []
+        self._health_history: list[tuple[float, float, float, float]] = []
 
     def _semantic_acc(self, token: str) -> np.ndarray:
         if token not in self.semantic_acc:
@@ -308,30 +329,68 @@ class HDCCognitiveSystem:
         return result
 
     def token_hv(self, token: str) -> np.ndarray:
-        return self.encoder.bundle(
-            [self.encoder.token_identity(token), self.semantic_hv(token)],
-            f"dynamic-token:{token}",
-        )
+        if not self.dynamic_semantics:
+            return self.encoder.token_identity(token).copy()
+        return self.semantic_hv(token)
+
+    def _padded_context(self, context: Sequence[str]) -> list[str]:
+        trimmed = list(context)[-self.context_length :]
+        return ["⟨PAD⟩"] * (self.context_length - len(trimmed)) + trimmed
+
+    def stable_context_hv(self, context: Sequence[str]) -> np.ndarray:
+        bound = []
+        for position, token in enumerate(self._padded_context(context), 1):
+            if self.positional_binding:
+                role = self.encoder.atom("role", position)
+                positioned = self.encoder.permute(self.encoder.token_identity(token), position)
+                bound.append(self.encoder.bind(role, positioned))
+            else:
+                bound.append(self.encoder.token_identity(token))
+        return self.encoder.bundle(bound, "stable-context")
+
+    def semantic_context_hv(self, context: Sequence[str]) -> np.ndarray | None:
+        if not self.dynamic_semantics:
+            return None
+        bound = []
+        for position, token in enumerate(self._padded_context(context), 1):
+            if self.positional_binding:
+                role = self.encoder.atom("semantic-role", position)
+                positioned = self.encoder.permute(self.semantic_hv(token), position)
+                bound.append(self.encoder.bind(role, positioned))
+            else:
+                bound.append(self.semantic_hv(token))
+        return self.encoder.bundle(bound, "semantic-context")
 
     def context_hv(self, context: Sequence[str]) -> np.ndarray:
-        trimmed = list(context)[-self.context_length :]
-        padded = ["⟨PAD⟩"] * (self.context_length - len(trimmed)) + trimmed
-        bound = []
-        for position, token in enumerate(padded, 1):
-            role = self.encoder.atom("role", position)
-            positioned = self.encoder.permute(self.token_hv(token), position)
-            bound.append(self.encoder.bind(role, positioned))
-        return self.encoder.bundle(bound, "context")
+        stable = self.stable_context_hv(context)
+        semantic = self.semantic_context_hv(context)
+        if semantic is None:
+            return stable
+        return self.encoder.bundle([stable, semantic], "combined-context")
 
     def _all_records(self) -> Iterable[Prototype]:
         yield from (self.stm[key] for key in sorted(self.stm))
         yield from (self.ltm[key] for key in sorted(self.ltm))
 
-    def _nearest(self, key_hv: np.ndarray) -> tuple[Prototype | None, float]:
+    def _record_similarity(
+        self,
+        stable_key_hv: np.ndarray,
+        semantic_key_hv: np.ndarray | None,
+        record: Prototype,
+    ) -> float:
+        stable = self.encoder.similarity(stable_key_hv, record.key_hv)
+        if stable >= 0.999 or semantic_key_hv is None or record.semantic_key_hv is None:
+            return stable
+        semantic = self.encoder.similarity(semantic_key_hv, record.semantic_key_hv)
+        return self.stable_key_weight * stable + (1.0 - self.stable_key_weight) * semantic
+
+    def _nearest(
+        self, stable_key_hv: np.ndarray, semantic_key_hv: np.ndarray | None = None
+    ) -> tuple[Prototype | None, float]:
         best: Prototype | None = None
         best_similarity = -1.0
         for record in self._all_records():
-            similarity = self.encoder.similarity(key_hv, record.key_hv)
+            similarity = self._record_similarity(stable_key_hv, semantic_key_hv, record)
             if similarity > best_similarity or (
                 math.isclose(similarity, best_similarity) and best is not None and record.record_id < best.record_id
             ):
@@ -339,24 +398,64 @@ class HDCCognitiveSystem:
                 best_similarity = similarity
         return best, best_similarity
 
+    def _nearest_k(
+        self, stable_key_hv: np.ndarray, semantic_key_hv: np.ndarray | None = None
+    ) -> list[tuple[Prototype, float]]:
+        scored = [
+            (record, self._record_similarity(stable_key_hv, semantic_key_hv, record))
+            for record in self._all_records()
+        ]
+        scored.sort(key=lambda item: (-item[1], item[0].record_id))
+        return scored[: self.neighbor_count]
+
     def predict(self, context: Sequence[str]) -> Prediction:
         if not self.stm and not self.ltm:
             return Prediction(None, 0.0, 0.0, None, None)
-        key_hv = self.context_hv(context)
-        record, similarity = self._nearest(key_hv)
-        if record is None or similarity < self.query_threshold:
+        stable_key_hv = self.stable_context_hv(context)
+        semantic_key_hv = self.semantic_context_hv(context)
+        exact_records = [
+            record
+            for record in self._all_records()
+            if self.encoder.similarity(stable_key_hv, record.key_hv) >= 0.999
+        ]
+        if exact_records:
+            record = min(exact_records, key=lambda item: item.record_id)
+            token, confidence = record.outcomes.top()
+            return Prediction(token, confidence, 1.0, record.store, record.record_id)
+        neighbors = self._nearest_k(stable_key_hv, semantic_key_hv)
+        if not neighbors or neighbors[0][1] < self.query_threshold:
+            similarity = neighbors[0][1] if neighbors else 0.0
             return Prediction(None, 0.0, max(0.0, similarity), None, None)
-        token, outcome_confidence = record.outcomes.top()
-        confidence = max(0.0, similarity) * outcome_confidence
-        return Prediction(token, confidence, similarity, record.store, record.record_id)
+        if self.neighbor_count == 1:
+            record, similarity = neighbors[0]
+            token, outcome_confidence = record.outcomes.top()
+            confidence = max(0.0, similarity) * outcome_confidence
+            return Prediction(token, confidence, similarity, record.store, record.record_id)
+        votes: dict[str, float] = {}
+        total_weight = 0.0
+        for record, similarity in neighbors:
+            if similarity < self.query_threshold:
+                continue
+            weight = (similarity - self.query_threshold + 1e-6) ** 2
+            outcome_total = max(1, sum(record.outcomes.counts.values()))
+            total_weight += weight
+            for token, count in record.outcomes.counts.items():
+                votes[token] = votes.get(token, 0.0) + weight * count / outcome_total
+        if not votes:
+            return Prediction(None, 0.0, max(0.0, neighbors[0][1]), None, None)
+        top_score = max(votes.values())
+        token = min(key for key, value in votes.items() if math.isclose(value, top_score))
+        record, similarity = neighbors[0]
+        return Prediction(token, top_score / max(1e-12, total_weight), similarity, record.store, record.record_id)
 
     def _update_semantic(self, token: str, context_hv: np.ndarray, mode: str) -> None:
+        if not self.dynamic_semantics:
+            return
         eta = {"DISCOVERY": 1, "MEMORIZATION": 2, "PRACTICE": 4}[mode]
         acc = self._semantic_acc(token)
         candidate = np.clip(
             acc.astype(np.int32)
-            + eta * context_hv.astype(np.int32)
-            + self.encoder.token_identity(token).astype(np.int32),
+            + eta * context_hv.astype(np.int32),
             -32768,
             32767,
         ).astype(np.int16)
@@ -365,15 +464,24 @@ class HDCCognitiveSystem:
         ties = candidate == 0
         new_hv[ties] = self.encoder.token_identity(token)[ties]
         drift = 1.0 - self.encoder.similarity(old_hv, new_hv)
-        if drift <= 0.02:
-            self.semantic_acc[token] = candidate
+        if drift > 0.02:
+            differing = np.flatnonzero(old_hv != new_hv)
+            max_changes = max(1, int(self.encoder.dimension * self.semantic_drift_fraction))
+            selected = differing[:max_changes]
+            bounded = acc.copy()
+            bounded[selected] = candidate[selected]
+            candidate = bounded
+        self.semantic_acc[token] = candidate
 
-    def _new_record(self, key_hv: np.ndarray) -> Prototype:
+    def _new_record(
+        self, key_hv: np.ndarray, semantic_key_hv: np.ndarray | None = None
+    ) -> Prototype:
         if len(self.stm) >= self.stm_capacity:
             raise CapacityError("STM_CAPACITY_FULL")
         record = Prototype(
             record_id=self._next_record_id,
             key_hv=key_hv.copy(),
+            semantic_key_hv=semantic_key_hv.copy() if semantic_key_hv is not None else None,
             outcomes=OutcomeTable(self.max_outcomes),
             created_tick=self.tick,
             last_used_tick=self.tick,
@@ -391,12 +499,14 @@ class HDCCognitiveSystem:
         pattern_key = hashlib.sha256(_stable_bytes(*context)).hexdigest()[:16]
         stats = self.pattern_stats.setdefault(pattern_key, PatternStats())
         stats.update(success)
-        key_hv = self.context_hv(context)
-        record, similarity = self._nearest(key_hv)
+        key_hv = self.stable_context_hv(context)
+        semantic_key_hv = self.semantic_context_hv(context)
+        record, similarity = self._nearest(key_hv, semantic_key_hv)
         if record is None or similarity < self.learn_threshold:
-            record = self._new_record(key_hv)
+            record = self._new_record(key_hv, semantic_key_hv)
         record.observe(context, target, self.tick)
-        self._update_semantic(target, key_hv, stats.mode)
+        learning_context = self.context_hv(context)
+        self._update_semantic(target, learning_context, stats.mode)
         repeated = 0.0
         if self._recent_predictions[-3:] and len(set(self._recent_predictions[-3:])) == 1:
             repeated = 1.0
@@ -417,6 +527,12 @@ class HDCCognitiveSystem:
         queue_pressure = 0.0
         resource_risk = max(0.0, 0.20 - self.resources.energy) / 0.20
         regulator_instability = max(0.0, self.hormones.two_ag - 0.80)
+        self._health_history.append((error, loop_score, resource_risk, regulator_instability))
+        self._health_history = self._health_history[-32:]
+        error = sum(item[0] for item in self._health_history) / len(self._health_history)
+        loop_score = sum(item[1] for item in self._health_history) / len(self._health_history)
+        resource_risk = sum(item[2] for item in self._health_history) / len(self._health_history)
+        regulator_instability = sum(item[3] for item in self._health_history) / len(self._health_history)
         self.coherence = max(
             0.0,
             min(
@@ -453,7 +569,17 @@ class HDCCognitiveSystem:
                     rejected += 1
         self.epoch += 1
         self.event_log.append({"epoch": self.epoch, "event": "TRAIN", "learned": learned, "rejected": rejected})
-        return {"epoch": self.epoch, "learned": learned, "rejected": rejected, **self.summary()}
+        auto_result = None
+        utilization = len(self.stm) / max(1, self.stm_capacity)
+        if self.auto_consolidate and (utilization >= 0.75 or self.resources.sleep_debt >= 0.80):
+            auto_result = self.consolidate()
+        return {
+            "epoch": self.epoch,
+            "learned": learned,
+            "rejected": rejected,
+            "auto_consolidation": auto_result,
+            **self.summary(),
+        }
 
     def promote(self) -> int:
         candidates = []
@@ -502,6 +628,12 @@ class HDCCognitiveSystem:
                 continue
             left, right = self.ltm[left_id], self.ltm[right_id]
             combined = self.encoder.bundle([left.key_hv, right.key_hv], f"merge:{left_id}:{right_id}")
+            semantic_combined = None
+            if left.semantic_key_hv is not None and right.semantic_key_hv is not None:
+                semantic_combined = self.encoder.bundle(
+                    [left.semantic_key_hv, right.semantic_key_hv],
+                    f"semantic-merge:{left_id}:{right_id}",
+                )
             outcome = OutcomeTable(self.max_outcomes, dict(left.outcomes.counts))
             for token, count in sorted(right.outcomes.counts.items()):
                 for _ in range(count):
@@ -509,6 +641,7 @@ class HDCCognitiveSystem:
             new = Prototype(
                 record_id=self._next_record_id,
                 key_hv=combined,
+                semantic_key_hv=semantic_combined,
                 outcomes=outcome,
                 support=left.support + right.support,
                 created_tick=self.tick,
@@ -530,25 +663,45 @@ class HDCCognitiveSystem:
         )
         return {"epoch": self.epoch, "promoted": promoted, "merged": merged, **self.summary()}
 
-    def generate(self, seed_text: str, max_tokens: int = 16) -> list[str]:
+    def generate_with_trace(self, seed_text: str, max_tokens: int = 16) -> dict[str, object]:
         output = tokenize(seed_text)
         seen: dict[tuple[str, ...], int] = {}
+        four_grams: dict[tuple[str, ...], int] = {}
+        for index in range(max(0, len(output) - 3)):
+            gram = tuple(output[index : index + 4])
+            four_grams[gram] = four_grams.get(gram, 0) + 1
+        stop_reason = "MAX_TOKENS"
         for _ in range(max_tokens):
             context = tuple(output[-self.context_length :])
             seen[context] = seen.get(context, 0) + 1
             if seen[context] > 2:
+                stop_reason = "CONTEXT_LOOP"
                 break
             prediction = self.predict(context)
             if prediction.token is None:
+                stop_reason = "UNKNOWN"
                 break
+            if len(output) >= 3:
+                gram = tuple(output[-3:] + [prediction.token])
+                if four_grams.get(gram, 0) >= 2:
+                    stop_reason = "NGRAM_LOOP"
+                    self.hormones.update(success=False, error=0.5, loop_score=1.0)
+                    break
+                four_grams[gram] = four_grams.get(gram, 0) + 1
             output.append(prediction.token)
-        return output
+        return {"tokens": output, "stop_reason": stop_reason, "generated": len(output) - len(tokenize(seed_text))}
+
+    def generate(self, seed_text: str, max_tokens: int = 16) -> list[str]:
+        return list(self.generate_with_trace(seed_text, max_tokens)["tokens"])
 
     def _state_payload(self) -> dict[str, object]:
         def record_payload(record: Prototype) -> dict[str, object]:
             return {
                 "record_id": record.record_id,
                 "key_hv": record.key_hv.copy(),
+                "semantic_key_hv": (
+                    record.semantic_key_hv.copy() if record.semantic_key_hv is not None else None
+                ),
                 "outcomes": dict(record.outcomes.counts),
                 "max_outcomes": record.outcomes.max_outcomes,
                 "support": record.support,
@@ -572,6 +725,7 @@ class HDCCognitiveSystem:
             "coherence": self.coherence,
             "event_log": copy.deepcopy(self.event_log),
             "recent_predictions": list(self._recent_predictions),
+            "health_history": list(self._health_history),
         }
 
     @staticmethod
@@ -579,6 +733,11 @@ class HDCCognitiveSystem:
         return Prototype(
             record_id=int(payload["record_id"]),
             key_hv=np.asarray(payload["key_hv"], dtype=np.int8).copy(),
+            semantic_key_hv=(
+                np.asarray(payload["semantic_key_hv"], dtype=np.int8).copy()
+                if payload.get("semantic_key_hv") is not None
+                else None
+            ),
             outcomes=OutcomeTable(int(payload["max_outcomes"]), dict(payload["outcomes"])),
             support=int(payload["support"]),
             created_tick=int(payload["created_tick"]),
@@ -601,6 +760,7 @@ class HDCCognitiveSystem:
         self.coherence = float(payload["coherence"])
         self.event_log = copy.deepcopy(payload["event_log"])
         self._recent_predictions = list(payload["recent_predictions"])
+        self._health_history = list(payload.get("health_history", []))
 
     def rollback(self) -> dict[str, object]:
         if not self._snapshots:
@@ -611,7 +771,18 @@ class HDCCognitiveSystem:
 
     def behavior_hash(self) -> str:
         digest = hashlib.sha256()
-        digest.update(_stable_bytes(self.seed, self.encoder.dimension, self.context_length))
+        digest.update(
+            _stable_bytes(
+                self.seed,
+                self.encoder.dimension,
+                self.context_length,
+                self.dynamic_semantics,
+                self.positional_binding,
+                self.semantic_drift_fraction,
+                self.neighbor_count,
+                self.stable_key_weight,
+            )
+        )
         for token in sorted(self.semantic_acc):
             digest.update(_stable_bytes("semantic", token))
             digest.update(self.semantic_acc[token].astype("<i2").tobytes())
@@ -620,6 +791,8 @@ class HDCCognitiveSystem:
                 record = store[record_id]
                 digest.update(_stable_bytes(store_name, record_id, record.support, record.parents))
                 digest.update(record.key_hv.tobytes())
+                if record.semantic_key_hv is not None:
+                    digest.update(record.semantic_key_hv.tobytes())
                 digest.update(json.dumps(record.outcomes.counts, sort_keys=True).encode())
         digest.update(json.dumps(self.hormones.as_dict(), sort_keys=True).encode())
         digest.update(_stable_bytes(round(self.coherence, 8), round(self.resources.energy, 8)))
@@ -634,7 +807,23 @@ class HDCCognitiveSystem:
             "energy": round(self.resources.energy, 4),
             "hormones": self.hormones.as_dict(),
             "behavior_hash": self.behavior_hash()[:16],
+            "logical_bytes": self.logical_bytes(),
         }
+
+    def logical_bytes(self) -> int:
+        """Approximate portable state bytes, excluding Python object overhead."""
+
+        vector_bytes = self.encoder.dimension // 8
+        prototype_bytes = sum(
+            vector_bytes * (2 if record.semantic_key_hv is not None else 1)
+            + 32
+            + 8 * len(record.outcomes.counts)
+            for record in self._all_records()
+        )
+        semantic_bytes = (
+            len(self.semantic_acc) * self.encoder.dimension * 2 if self.dynamic_semantics else 0
+        )
+        return int(prototype_bytes + semantic_bytes)
 
 
 class NGramBaseline:
@@ -661,6 +850,90 @@ class NGramBaseline:
             return Prediction(None, 0.0, 0.0, None, None)
         token, confidence = table.top()
         return Prediction(token, confidence, 1.0, "NGRAM", None)
+
+    def logical_bytes(self) -> int:
+        return sum(
+            8 * len(context) + 8 * len(table.counts) + 16
+            for context, table in self.table.items()
+        )
+
+
+class BackoffNGramBaseline(NGramBaseline):
+    """Bounded longest-context-first n-gram baseline."""
+
+    def train_sequences(self, sequences: Sequence[Sequence[str] | str]) -> None:
+        for sequence in sequences:
+            tokens = tokenize(sequence) if isinstance(sequence, str) else list(sequence)
+            for index in range(1, len(tokens)):
+                for size in range(1, min(self.context_length, index) + 1):
+                    context = tuple(tokens[index - size : index])
+                    if context not in self.table and len(self.table) >= self.max_contexts:
+                        continue
+                    self.table.setdefault(context, OutcomeTable()).observe(tokens[index])
+
+    def predict(self, context: Sequence[str]) -> Prediction:
+        trimmed = list(context)[-self.context_length :]
+        for size in range(len(trimmed), 0, -1):
+            table = self.table.get(tuple(trimmed[-size:]))
+            if table is not None:
+                token, confidence = table.top()
+                return Prediction(token, confidence, size / self.context_length, "BACKOFF_NGRAM", None)
+        return Prediction(None, 0.0, 0.0, None, None)
+
+
+def _context_features(context: Sequence[str], context_length: int) -> frozenset[str]:
+    trimmed = list(context)[-context_length:]
+    padded = ["⟨PAD⟩"] * (context_length - len(trimmed)) + trimmed
+    features: set[str] = set()
+    for position, token in enumerate(padded):
+        marked = f"⟨{token}⟩"
+        for size in (3, 4, 5):
+            for index in range(max(0, len(marked) - size + 1)):
+                features.add(f"{position}:{marked[index:index + size]}")
+    return frozenset(features)
+
+
+class CharNGramKNNBaseline:
+    """Sparse character-feature nearest-neighbor control without HDC algebra."""
+
+    def __init__(self, context_length: int = 4, max_contexts: int = 2048) -> None:
+        self.context_length = context_length
+        self.max_contexts = max_contexts
+        self.records: dict[tuple[str, ...], tuple[frozenset[str], OutcomeTable]] = {}
+
+    def train_sequences(self, sequences: Sequence[Sequence[str] | str]) -> None:
+        for sequence in sequences:
+            tokens = tokenize(sequence) if isinstance(sequence, str) else list(sequence)
+            for index in range(1, len(tokens)):
+                context = tuple(tokens[max(0, index - self.context_length) : index])
+                if context not in self.records:
+                    if len(self.records) >= self.max_contexts:
+                        continue
+                    self.records[context] = (_context_features(context, self.context_length), OutcomeTable())
+                self.records[context][1].observe(tokens[index])
+
+    def predict(self, context: Sequence[str]) -> Prediction:
+        if not self.records:
+            return Prediction(None, 0.0, 0.0, None, None)
+        query = _context_features(context, self.context_length)
+        best_context: tuple[str, ...] | None = None
+        best_score = -1.0
+        best_table: OutcomeTable | None = None
+        for stored_context in sorted(self.records):
+            features, table = self.records[stored_context]
+            union = len(query | features)
+            score = len(query & features) / union if union else 1.0
+            if score > best_score:
+                best_context, best_score, best_table = stored_context, score, table
+        token, outcome_confidence = best_table.top() if best_table else (None, 0.0)
+        return Prediction(token, best_score * outcome_confidence, best_score, "CHAR_KNN", None)
+
+    def logical_bytes(self) -> int:
+        return sum(
+            sum(len(feature.encode("utf-8")) for feature in features)
+            + 8 * len(table.counts)
+            for features, table in self.records.values()
+        )
 
 
 def evaluate_next_token(
@@ -709,6 +982,8 @@ __all__ = [
     "CapacityError",
     "HDCCognitiveSystem",
     "HDCEncoder",
+    "BackoffNGramBaseline",
+    "CharNGramKNNBaseline",
     "NGramBaseline",
     "Prediction",
     "evaluate_next_token",

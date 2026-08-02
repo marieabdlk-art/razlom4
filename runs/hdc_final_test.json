@@ -1,0 +1,2163 @@
+{
+  "benchmark_version": "hdc-preregistered-v1",
+  "split": "test",
+  "results": [
+    {
+      "seed": 101,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 117,
+            "known": 330,
+            "accuracy": 0.2925,
+            "coverage": 0.825
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29752,
+          "train_seconds": 0.002032999999999993,
+          "retention": {
+            "a_before": 0.3,
+            "a_after": 0.3,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 150,
+            "known": 227,
+            "accuracy": 0.375,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 39376,
+          "train_seconds": 0.0038265829999999945,
+          "retention": {
+            "a_before": 0.492,
+            "a_after": 0.492,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 126,
+            "known": 400,
+            "accuracy": 0.315,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 141,
+            "known": 400,
+            "accuracy": 0.3525,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 3,
+            "known": 10,
+            "accuracy": 0.3,
+            "coverage": 1.0
+          },
+          "logical_bytes": 226154,
+          "train_seconds": 0.007024417000000005,
+          "retention": {
+            "a_before": 0.376,
+            "a_after": 0.376,
+            "drop": 0.0,
+            "b_acquired": 0.4,
+            "harmonic": 0.38762886597938145
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 173,
+            "known": 400,
+            "accuracy": 0.4325,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 167,
+            "known": 400,
+            "accuracy": 0.4175,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 90856,
+          "train_seconds": 1.907691542,
+          "retention": {
+            "a_before": 0.464,
+            "a_after": 0.464,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6338797814207651
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 167,
+            "known": 400,
+            "accuracy": 0.4175,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 406376,
+          "train_seconds": 3.1324831250000003,
+          "retention": {
+            "a_before": 0.456,
+            "a_after": 0.456,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6263736263736264
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 17
+      }
+    },
+    {
+      "seed": 102,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 116,
+            "known": 316,
+            "accuracy": 0.29,
+            "coverage": 0.79
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29336,
+          "train_seconds": 0.004116250000000932,
+          "retention": {
+            "a_before": 0.312,
+            "a_after": 0.312,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 179,
+            "known": 400,
+            "accuracy": 0.4475,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 149,
+            "known": 227,
+            "accuracy": 0.3725,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 38968,
+          "train_seconds": 0.0037666249999990242,
+          "retention": {
+            "a_before": 0.468,
+            "a_after": 0.468,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 132,
+            "known": 400,
+            "accuracy": 0.33,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 146,
+            "known": 400,
+            "accuracy": 0.365,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 2,
+            "known": 10,
+            "accuracy": 0.2,
+            "coverage": 1.0
+          },
+          "logical_bytes": 221378,
+          "train_seconds": 0.0067172909999992925,
+          "retention": {
+            "a_before": 0.38,
+            "a_after": 0.38,
+            "drop": 0.0,
+            "b_acquired": 0.3,
+            "harmonic": 0.3352941176470588
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 180,
+            "known": 400,
+            "accuracy": 0.45,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 184,
+            "known": 400,
+            "accuracy": 0.46,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 89512,
+          "train_seconds": 1.9199740410000015,
+          "retention": {
+            "a_before": 0.46,
+            "a_after": 0.46,
+            "drop": 0.0,
+            "b_acquired": 0.8,
+            "harmonic": 0.5841269841269842
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 181,
+            "known": 400,
+            "accuracy": 0.4525,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 184,
+            "known": 400,
+            "accuracy": 0.46,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 391720,
+          "train_seconds": 3.148155458999998,
+          "retention": {
+            "a_before": 0.468,
+            "a_after": 0.468,
+            "drop": 0.0,
+            "b_acquired": 0.7,
+            "harmonic": 0.560958904109589
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 22.75
+      }
+    },
+    {
+      "seed": 103,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 108,
+            "known": 316,
+            "accuracy": 0.27,
+            "coverage": 0.79
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29344,
+          "train_seconds": 0.0018205000000008909,
+          "retention": {
+            "a_before": 0.296,
+            "a_after": 0.296,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 176,
+            "known": 400,
+            "accuracy": 0.44,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 143,
+            "known": 227,
+            "accuracy": 0.3575,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 38960,
+          "train_seconds": 0.003829416999998614,
+          "retention": {
+            "a_before": 0.464,
+            "a_after": 0.464,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 125,
+            "known": 400,
+            "accuracy": 0.3125,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 155,
+            "known": 400,
+            "accuracy": 0.3875,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 4,
+            "known": 10,
+            "accuracy": 0.4,
+            "coverage": 1.0
+          },
+          "logical_bytes": 222672,
+          "train_seconds": 0.00683054199999944,
+          "retention": {
+            "a_before": 0.388,
+            "a_after": 0.388,
+            "drop": 0.0,
+            "b_acquired": 0.5,
+            "harmonic": 0.43693693693693697
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 168,
+            "known": 400,
+            "accuracy": 0.42,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 169,
+            "known": 400,
+            "accuracy": 0.4225,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 89512,
+          "train_seconds": 1.9401706670000003,
+          "retention": {
+            "a_before": 0.468,
+            "a_after": 0.468,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6376021798365124
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 167,
+            "known": 400,
+            "accuracy": 0.4175,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 170,
+            "known": 400,
+            "accuracy": 0.425,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 401960,
+          "train_seconds": 3.1536146669999994,
+          "retention": {
+            "a_before": 0.46,
+            "a_after": 0.46,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6301369863013699
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 23
+      }
+    },
+    {
+      "seed": 104,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 112,
+            "known": 324,
+            "accuracy": 0.28,
+            "coverage": 0.81
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29608,
+          "train_seconds": 0.0017899580000033666,
+          "retention": {
+            "a_before": 0.288,
+            "a_after": 0.288,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 172,
+            "known": 400,
+            "accuracy": 0.43,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 143,
+            "known": 227,
+            "accuracy": 0.3575,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 39240,
+          "train_seconds": 0.003888207999999338,
+          "retention": {
+            "a_before": 0.464,
+            "a_after": 0.464,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 128,
+            "known": 400,
+            "accuracy": 0.32,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 141,
+            "known": 400,
+            "accuracy": 0.3525,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 5,
+            "known": 10,
+            "accuracy": 0.5,
+            "coverage": 1.0
+          },
+          "logical_bytes": 223774,
+          "train_seconds": 0.006764665999995145,
+          "retention": {
+            "a_before": 0.34,
+            "a_after": 0.34,
+            "drop": 0.0,
+            "b_acquired": 0.6,
+            "harmonic": 0.43404255319148943
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 168,
+            "known": 400,
+            "accuracy": 0.42,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 168,
+            "known": 400,
+            "accuracy": 0.42,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 90352,
+          "train_seconds": 1.9799101250000035,
+          "retention": {
+            "a_before": 0.456,
+            "a_after": 0.456,
+            "drop": 0.0,
+            "b_acquired": 0.9,
+            "harmonic": 0.6053097345132744
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 169,
+            "known": 400,
+            "accuracy": 0.4225,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 166,
+            "known": 400,
+            "accuracy": 0.415,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 413680,
+          "train_seconds": 3.153634167,
+          "retention": {
+            "a_before": 0.46,
+            "a_after": 0.46,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6301369863013699
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 22.25
+      }
+    },
+    {
+      "seed": 105,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 115,
+            "known": 321,
+            "accuracy": 0.2875,
+            "coverage": 0.8025
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29176,
+          "train_seconds": 0.0017875839999987875,
+          "retention": {
+            "a_before": 0.304,
+            "a_after": 0.304,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 171,
+            "known": 400,
+            "accuracy": 0.4275,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 143,
+            "known": 227,
+            "accuracy": 0.3575,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 38752,
+          "train_seconds": 0.003716624999995588,
+          "retention": {
+            "a_before": 0.46,
+            "a_after": 0.46,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 133,
+            "known": 400,
+            "accuracy": 0.3325,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 152,
+            "known": 400,
+            "accuracy": 0.38,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 3,
+            "known": 10,
+            "accuracy": 0.3,
+            "coverage": 1.0
+          },
+          "logical_bytes": 220950,
+          "train_seconds": 0.0072220420000022045,
+          "retention": {
+            "a_before": 0.348,
+            "a_after": 0.348,
+            "drop": 0.0,
+            "b_acquired": 0.4,
+            "harmonic": 0.37219251336898396
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 171,
+            "known": 400,
+            "accuracy": 0.4275,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 5,
+            "known": 10,
+            "accuracy": 0.5,
+            "coverage": 1.0
+          },
+          "logical_bytes": 89008,
+          "train_seconds": 1.920239292000005,
+          "retention": {
+            "a_before": 0.444,
+            "a_after": 0.444,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6149584487534626
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 170,
+            "known": 400,
+            "accuracy": 0.425,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 5,
+            "known": 10,
+            "accuracy": 0.5,
+            "coverage": 1.0
+          },
+          "logical_bytes": 401072,
+          "train_seconds": 3.5056439999999967,
+          "retention": {
+            "a_before": 0.444,
+            "a_after": 0.444,
+            "drop": 0.0,
+            "b_acquired": 1.0,
+            "harmonic": 0.6149584487534626
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 19.5
+      }
+    },
+    {
+      "seed": 106,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 117,
+            "known": 325,
+            "accuracy": 0.2925,
+            "coverage": 0.8125
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29480,
+          "train_seconds": 0.001678791999992768,
+          "retention": {
+            "a_before": 0.296,
+            "a_after": 0.296,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 178,
+            "known": 400,
+            "accuracy": 0.445,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 143,
+            "known": 227,
+            "accuracy": 0.3575,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 39064,
+          "train_seconds": 0.0037090840000075787,
+          "retention": {
+            "a_before": 0.444,
+            "a_after": 0.444,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 131,
+            "known": 400,
+            "accuracy": 0.3275,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 149,
+            "known": 400,
+            "accuracy": 0.3725,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 6,
+            "known": 10,
+            "accuracy": 0.6,
+            "coverage": 1.0
+          },
+          "logical_bytes": 223028,
+          "train_seconds": 0.00851174999999671,
+          "retention": {
+            "a_before": 0.372,
+            "a_after": 0.372,
+            "drop": 0.0,
+            "b_acquired": 0.3,
+            "harmonic": 0.33214285714285713
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 180,
+            "known": 400,
+            "accuracy": 0.45,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 177,
+            "known": 400,
+            "accuracy": 0.4425,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 90016,
+          "train_seconds": 1.9310310000000044,
+          "retention": {
+            "a_before": 0.44,
+            "a_after": 0.44,
+            "drop": 0.0,
+            "b_acquired": 0.9,
+            "harmonic": 0.591044776119403
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 178,
+            "known": 400,
+            "accuracy": 0.445,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 176,
+            "known": 400,
+            "accuracy": 0.44,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 404896,
+          "train_seconds": 3.1736187909999956,
+          "retention": {
+            "a_before": 0.436,
+            "a_after": 0.436,
+            "drop": 0.0,
+            "b_acquired": 0.9,
+            "harmonic": 0.5874251497005988
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 19.5
+      }
+    },
+    {
+      "seed": 107,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 105,
+            "known": 320,
+            "accuracy": 0.2625,
+            "coverage": 0.8
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29600,
+          "train_seconds": 0.0017407079999998132,
+          "retention": {
+            "a_before": 0.276,
+            "a_after": 0.276,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 164,
+            "known": 400,
+            "accuracy": 0.41,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 146,
+            "known": 227,
+            "accuracy": 0.365,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 39232,
+          "train_seconds": 0.0039713750000061054,
+          "retention": {
+            "a_before": 0.456,
+            "a_after": 0.456,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 115,
+            "known": 400,
+            "accuracy": 0.2875,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 143,
+            "known": 400,
+            "accuracy": 0.3575,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 4,
+            "known": 10,
+            "accuracy": 0.4,
+            "coverage": 1.0
+          },
+          "logical_bytes": 223810,
+          "train_seconds": 0.006856249999998454,
+          "retention": {
+            "a_before": 0.384,
+            "a_after": 0.384,
+            "drop": 0.0,
+            "b_acquired": 0.2,
+            "harmonic": 0.26301369863013696
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 168,
+            "known": 400,
+            "accuracy": 0.42,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 170,
+            "known": 400,
+            "accuracy": 0.425,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 8,
+            "known": 10,
+            "accuracy": 0.8,
+            "coverage": 1.0
+          },
+          "logical_bytes": 90352,
+          "train_seconds": 1.9108444579999997,
+          "retention": {
+            "a_before": 0.456,
+            "a_after": 0.456,
+            "drop": 0.0,
+            "b_acquired": 0.8,
+            "harmonic": 0.5808917197452229
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 168,
+            "known": 400,
+            "accuracy": 0.42,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 173,
+            "known": 400,
+            "accuracy": 0.4325,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 9,
+            "known": 10,
+            "accuracy": 0.9,
+            "coverage": 1.0
+          },
+          "logical_bytes": 405488,
+          "train_seconds": 3.151333374999993,
+          "retention": {
+            "a_before": 0.46,
+            "a_after": 0.46,
+            "drop": 0.0,
+            "b_acquired": 0.8,
+            "harmonic": 0.5841269841269842
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 19.5
+      }
+    },
+    {
+      "seed": 108,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 121,
+            "known": 330,
+            "accuracy": 0.3025,
+            "coverage": 0.825
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29720,
+          "train_seconds": 0.0018847500000021,
+          "retention": {
+            "a_before": 0.252,
+            "a_after": 0.252,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 179,
+            "known": 400,
+            "accuracy": 0.4475,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 136,
+            "known": 227,
+            "accuracy": 0.34,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 39288,
+          "train_seconds": 0.0038022499999925685,
+          "retention": {
+            "a_before": 0.484,
+            "a_after": 0.484,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 135,
+            "known": 400,
+            "accuracy": 0.3375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 155,
+            "known": 400,
+            "accuracy": 0.3875,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 6,
+            "known": 10,
+            "accuracy": 0.6,
+            "coverage": 1.0
+          },
+          "logical_bytes": 223892,
+          "train_seconds": 0.00909912500000587,
+          "retention": {
+            "a_before": 0.352,
+            "a_after": 0.352,
+            "drop": 0.0,
+            "b_acquired": 0.3,
+            "harmonic": 0.3239263803680982
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 177,
+            "known": 400,
+            "accuracy": 0.4425,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 171,
+            "known": 400,
+            "accuracy": 0.4275,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 6,
+            "known": 10,
+            "accuracy": 0.6,
+            "coverage": 1.0
+          },
+          "logical_bytes": 90688,
+          "train_seconds": 1.9210088340000055,
+          "retention": {
+            "a_before": 0.476,
+            "a_after": 0.476,
+            "drop": 0.0,
+            "b_acquired": 0.8,
+            "harmonic": 0.5968652037617556
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 171,
+            "known": 400,
+            "accuracy": 0.4275,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 6,
+            "known": 10,
+            "accuracy": 0.6,
+            "coverage": 1.0
+          },
+          "logical_bytes": 404032,
+          "train_seconds": 3.249873000000008,
+          "retention": {
+            "a_before": 0.464,
+            "a_after": 0.464,
+            "drop": 0.0,
+            "b_acquired": 0.8,
+            "harmonic": 0.5873417721518988
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 23.25
+      }
+    },
+    {
+      "seed": 109,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 120,
+            "known": 331,
+            "accuracy": 0.3,
+            "coverage": 0.8275
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 29888,
+          "train_seconds": 0.0019245839999939562,
+          "retention": {
+            "a_before": 0.26,
+            "a_after": 0.26,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 134,
+            "known": 227,
+            "accuracy": 0.335,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 39528,
+          "train_seconds": 0.004765582999993967,
+          "retention": {
+            "a_before": 0.444,
+            "a_after": 0.444,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 134,
+            "known": 400,
+            "accuracy": 0.335,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 150,
+            "known": 400,
+            "accuracy": 0.375,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 5,
+            "known": 10,
+            "accuracy": 0.5,
+            "coverage": 1.0
+          },
+          "logical_bytes": 225894,
+          "train_seconds": 0.007125541999997154,
+          "retention": {
+            "a_before": 0.324,
+            "a_after": 0.324,
+            "drop": 0.0,
+            "b_acquired": 0.3,
+            "harmonic": 0.31153846153846154
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 177,
+            "known": 400,
+            "accuracy": 0.4425,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 91192,
+          "train_seconds": 1.945603042000002,
+          "retention": {
+            "a_before": 0.428,
+            "a_after": 0.428,
+            "drop": 0.0,
+            "b_acquired": 0.8,
+            "harmonic": 0.5576547231270359
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 171,
+            "known": 400,
+            "accuracy": 0.4275,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 179,
+            "known": 400,
+            "accuracy": 0.4475,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 406968,
+          "train_seconds": 3.183367000000004,
+          "retention": {
+            "a_before": 0.428,
+            "a_after": 0.428,
+            "drop": 0.0,
+            "b_acquired": 0.9,
+            "harmonic": 0.5801204819277108
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 19.5
+      }
+    },
+    {
+      "seed": 110,
+      "arms": {
+        "exact_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 124,
+            "known": 322,
+            "accuracy": 0.31,
+            "coverage": 0.805
+          },
+          "noise": {
+            "total": 400,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 0,
+            "accuracy": 0.0,
+            "coverage": 0.0
+          },
+          "logical_bytes": 28992,
+          "train_seconds": 0.0017022090000011758,
+          "retention": {
+            "a_before": 0.304,
+            "a_after": 0.304,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "backoff_ngram": {
+          "clean": {
+            "total": 400,
+            "correct": 183,
+            "known": 400,
+            "accuracy": 0.4575,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 131,
+            "known": 227,
+            "accuracy": 0.3275,
+            "coverage": 0.5675
+          },
+          "order": {
+            "total": 10,
+            "correct": 0,
+            "known": 10,
+            "accuracy": 0.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 38568,
+          "train_seconds": 0.0037052499999958854,
+          "retention": {
+            "a_before": 0.456,
+            "a_after": 0.456,
+            "drop": 0.0,
+            "b_acquired": 0.0,
+            "harmonic": 0.0
+          }
+        },
+        "char_knn": {
+          "clean": {
+            "total": 400,
+            "correct": 150,
+            "known": 400,
+            "accuracy": 0.375,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 170,
+            "known": 400,
+            "accuracy": 0.425,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 4,
+            "known": 10,
+            "accuracy": 0.4,
+            "coverage": 1.0
+          },
+          "logical_bytes": 216294,
+          "train_seconds": 0.008681625000008353,
+          "retention": {
+            "a_before": 0.384,
+            "a_after": 0.384,
+            "drop": 0.0,
+            "b_acquired": 0.1,
+            "harmonic": 0.15867768595041323
+          }
+        },
+        "static_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 186,
+            "known": 400,
+            "accuracy": 0.465,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 175,
+            "known": 400,
+            "accuracy": 0.4375,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 88336,
+          "train_seconds": 1.9423481249999952,
+          "retention": {
+            "a_before": 0.456,
+            "a_after": 0.456,
+            "drop": 0.0,
+            "b_acquired": 0.6,
+            "harmonic": 0.5181818181818182
+          }
+        },
+        "dynamic_hdc": {
+          "clean": {
+            "total": 400,
+            "correct": 184,
+            "known": 400,
+            "accuracy": 0.46,
+            "coverage": 1.0
+          },
+          "noise": {
+            "total": 400,
+            "correct": 173,
+            "known": 400,
+            "accuracy": 0.4325,
+            "coverage": 1.0
+          },
+          "order": {
+            "total": 10,
+            "correct": 10,
+            "known": 10,
+            "accuracy": 1.0,
+            "coverage": 1.0
+          },
+          "logical_bytes": 408080,
+          "train_seconds": 3.083230166999982,
+          "retention": {
+            "a_before": 0.448,
+            "a_after": 0.448,
+            "drop": 0.0,
+            "b_acquired": 0.6,
+            "harmonic": 0.5129770992366411
+          }
+        }
+      },
+      "loop": {
+        "prompts": 200,
+        "failures": 0,
+        "failure_rate": 0.0,
+        "mean_generated_tokens": 22.75
+      }
+    }
+  ],
+  "aggregate": {
+    "seeds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110
+    ],
+    "arms": {
+      "exact_ngram": {
+        "clean_accuracy": {
+          "mean": 0.28875,
+          "stdev": 0.014589284500009654,
+          "values": [
+            0.2925,
+            0.29,
+            0.27,
+            0.28,
+            0.2875,
+            0.2925,
+            0.2625,
+            0.3025,
+            0.3,
+            0.31
+          ]
+        },
+        "noise_accuracy": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "order_accuracy": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_drop": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_harmonic": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "logical_bytes_mean": 29489.6
+      },
+      "backoff_ngram": {
+        "clean_accuracy": {
+          "mean": 0.438,
+          "stdev": 0.013218253372598913,
+          "values": [
+            0.4375,
+            0.4475,
+            0.44,
+            0.43,
+            0.4275,
+            0.445,
+            0.41,
+            0.4475,
+            0.4375,
+            0.4575
+          ]
+        },
+        "noise_accuracy": {
+          "mean": 0.3545,
+          "stdev": 0.0156702123647242,
+          "values": [
+            0.375,
+            0.3725,
+            0.3575,
+            0.3575,
+            0.3575,
+            0.3575,
+            0.365,
+            0.34,
+            0.335,
+            0.3275
+          ]
+        },
+        "order_accuracy": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_drop": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_harmonic": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "logical_bytes_mean": 39097.6
+      },
+      "char_knn": {
+        "clean_accuracy": {
+          "mean": 0.32725,
+          "stdev": 0.02231249027388522,
+          "values": [
+            0.315,
+            0.33,
+            0.3125,
+            0.32,
+            0.3325,
+            0.3275,
+            0.2875,
+            0.3375,
+            0.335,
+            0.375
+          ]
+        },
+        "noise_accuracy": {
+          "mean": 0.3755,
+          "stdev": 0.021756225162774298,
+          "values": [
+            0.3525,
+            0.365,
+            0.3875,
+            0.3525,
+            0.38,
+            0.3725,
+            0.3575,
+            0.3875,
+            0.375,
+            0.425
+          ]
+        },
+        "order_accuracy": {
+          "mean": 0.42,
+          "stdev": 0.13165611772087665,
+          "values": [
+            0.3,
+            0.2,
+            0.4,
+            0.5,
+            0.3,
+            0.6,
+            0.4,
+            0.6,
+            0.5,
+            0.4
+          ]
+        },
+        "retention_drop": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_harmonic": {
+          "mean": 0.33553940707538177,
+          "stdev": 0.08253190767869834,
+          "values": [
+            0.38762886597938145,
+            0.3352941176470588,
+            0.43693693693693697,
+            0.43404255319148943,
+            0.37219251336898396,
+            0.33214285714285713,
+            0.26301369863013696,
+            0.3239263803680982,
+            0.31153846153846154,
+            0.15867768595041323
+          ]
+        },
+        "logical_bytes_mean": 222784.6
+      },
+      "static_hdc": {
+        "clean_accuracy": {
+          "mean": 0.4375,
+          "stdev": 0.015046225071056503,
+          "values": [
+            0.4325,
+            0.45,
+            0.42,
+            0.42,
+            0.4375,
+            0.45,
+            0.42,
+            0.4425,
+            0.4375,
+            0.465
+          ]
+        },
+        "noise_accuracy": {
+          "mean": 0.43225,
+          "stdev": 0.013199852692780758,
+          "values": [
+            0.4175,
+            0.46,
+            0.4225,
+            0.42,
+            0.4275,
+            0.4425,
+            0.425,
+            0.4275,
+            0.4425,
+            0.4375
+          ]
+        },
+        "order_accuracy": {
+          "mean": 0.85,
+          "stdev": 0.17159383568311667,
+          "values": [
+            0.9,
+            0.9,
+            0.9,
+            0.9,
+            0.5,
+            1.0,
+            0.8,
+            0.6,
+            1.0,
+            1.0
+          ]
+        },
+        "retention_drop": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_harmonic": {
+          "mean": 0.5920515369586234,
+          "stdev": 0.035553356895695755,
+          "values": [
+            0.6338797814207651,
+            0.5841269841269842,
+            0.6376021798365124,
+            0.6053097345132744,
+            0.6149584487534626,
+            0.591044776119403,
+            0.5808917197452229,
+            0.5968652037617556,
+            0.5576547231270359,
+            0.5181818181818182
+          ]
+        },
+        "logical_bytes_mean": 89982.4
+      },
+      "dynamic_hdc": {
+        "clean_accuracy": {
+          "mean": 0.43574999999999997,
+          "stdev": 0.014095409024060136,
+          "values": [
+            0.4375,
+            0.4525,
+            0.4175,
+            0.4225,
+            0.4375,
+            0.445,
+            0.42,
+            0.4375,
+            0.4275,
+            0.46
+          ]
+        },
+        "noise_accuracy": {
+          "mean": 0.43225,
+          "stdev": 0.01376640435585448,
+          "values": [
+            0.4175,
+            0.46,
+            0.425,
+            0.415,
+            0.425,
+            0.44,
+            0.4325,
+            0.4275,
+            0.4475,
+            0.4325
+          ]
+        },
+        "order_accuracy": {
+          "mean": 0.88,
+          "stdev": 0.18135294011647257,
+          "values": [
+            1.0,
+            1.0,
+            0.9,
+            0.9,
+            0.5,
+            1.0,
+            0.9,
+            0.6,
+            1.0,
+            1.0
+          ]
+        },
+        "retention_drop": {
+          "mean": 0.0,
+          "stdev": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "retention_harmonic": {
+          "mean": 0.5914556438983252,
+          "stdev": 0.03661881259306356,
+          "values": [
+            0.6263736263736264,
+            0.560958904109589,
+            0.6301369863013699,
+            0.6301369863013699,
+            0.6149584487534626,
+            0.5874251497005988,
+            0.5841269841269842,
+            0.5873417721518988,
+            0.5801204819277108,
+            0.5129770992366411
+          ]
+        },
+        "logical_bytes_mean": 404427.2
+      }
+    },
+    "loop_failure_rate_mean": 0.0,
+    "gates": {
+      "hard": {
+        "loop_rate_at_most_2pct": true,
+        "retention_drop_at_most_5pct": true,
+        "clean_regression_at_most_2pct": true
+      },
+      "value": {
+        "noise_advantage_at_least_3pct": true,
+        "retention_harmonic_advantage_at_least_3pct": false
+      },
+      "noise_advantage": 0.05675000000000002,
+      "clean_regression": 0.0022500000000000298,
+      "retention_harmonic_advantage": -0.0005958930602982804,
+      "verdict": "VALUABLE_PROTOTYPE"
+    }
+  }
+}

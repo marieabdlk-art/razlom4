@@ -78,6 +78,10 @@ razlom4-full full_pipeline_task.json \
 [`HDC_COGNITIVE_V3_Colab.ipynb`](HDC_COGNITIVE_V3_Colab.ipynb).
 [Открыть HDC-прототип в Google Colab](https://colab.research.google.com/github/marieabdlk-art/razlom4/blob/main/HDC_COGNITIVE_V3_Colab.ipynb).
 Он не использует API или платные модели и сравнивает HDC с n-граммным baseline.
+Зафиксированный benchmark на десяти новых seeds подтвердил узкую ценность
+статического HDC-ядра для шумоустойчивой ассоциативной памяти; динамический
+semantic overlay пока не доказал дополнительную ценность. Результаты и честные
+ограничения: [`HDC_EXPERIMENT_RESULT.md`](HDC_EXPERIMENT_RESULT.md).
 
 В репозитории также есть слепой benchmark harness для сравнения single agent,
 best-of-4, обычного debate, РАЗЛОМ-4 без ролей и полного протокола при одинаковом

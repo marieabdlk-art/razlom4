@@ -174,6 +174,7 @@ accuracy advantage over one strong agent. See
 - [`RAZLOM4_KUDS_GLM51_Colab.ipynb`](RAZLOM4_KUDS_GLM51_Colab.ipynb) — ready-to-run GLM-5.1 Colab notebook.
 - [`HDC-architecture-spec-v3.md`](HDC-architecture-spec-v3.md) — implementable reference specification produced by the HDC case study.
 - [`hdc_cognitive.py`](hdc_cognitive.py) and [`HDC_COGNITIVE_V3_Colab.ipynb`](HDC_COGNITIVE_V3_Colab.ipynb) — API-free runnable HDC core and Colab benchmark against an n-gram baseline ([open in Colab](https://colab.research.google.com/github/marieabdlk-art/razlom4/blob/main/HDC_COGNITIVE_V3_Colab.ipynb)).
+- [`HDC_EXPERIMENT_RESULT.md`](HDC_EXPERIMENT_RESULT.md) — preregistered ten-seed evidence for a narrow noise-tolerant HDC-memory use case, plus the negative ablation result for dynamic semantics.
 - [`example_session.json`](example_session.json) — reproducible example.
 - [`benchmark/`](benchmark/) — blind scorer contracts and smoke bank.
 - [`RAZLOM4_BENCHMARK_PLAN.md`](RAZLOM4_BENCHMARK_PLAN.md) — preregistered evaluation design.

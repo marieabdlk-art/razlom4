@@ -3,6 +3,8 @@ import unittest
 import numpy as np
 
 from hdc_cognitive import (
+    BackoffNGramBaseline,
+    CharNGramKNNBaseline,
     HDCCognitiveSystem,
     HDCEncoder,
     NGramBaseline,
@@ -108,6 +110,70 @@ class HDCCognitiveSystemTests(unittest.TestCase):
         self.assertEqual(hdc["total"], ngram["total"])
         self.assertGreaterEqual(hdc["coverage"], 0.0)
         self.assertLessEqual(hdc["coverage"], 1.0)
+
+    def test_backoff_and_char_controls_are_runnable(self):
+        rows = ["красный робот видит ключ .", "синий робот ищет ключ ."] * 3
+        backoff = BackoffNGramBaseline(max_contexts=128)
+        char_knn = CharNGramKNNBaseline(max_contexts=128)
+        backoff.train_sequences(rows)
+        char_knn.train_sequences(rows)
+        self.assertIsNotNone(backoff.predict(["новый", "робот"]).token)
+        self.assertIsNotNone(char_knn.predict(["красны", "робот", "видит"]).token)
+
+    def test_static_hdc_does_not_create_semantic_accumulators(self):
+        model = self.new_model(dynamic_semantics=False)
+        model.train_sequences(["кот видит ключ ."] * 2)
+        self.assertEqual(model.semantic_acc, {})
+
+    def test_loop_guard_stops_before_third_repeated_fourgram(self):
+        model = self.new_model()
+        model.train_sequences(["а б в г а б в г а б в г"] * 4)
+        report = model.generate_with_trace("а б в", max_tokens=40)
+        tokens = report["tokens"]
+        counts = {}
+        for index in range(len(tokens) - 3):
+            gram = tuple(tokens[index : index + 4])
+            counts[gram] = counts.get(gram, 0) + 1
+        self.assertLessEqual(max(counts.values(), default=0), 2)
+        self.assertIn(report["stop_reason"], {"NGRAM_LOOP", "CONTEXT_LOOP", "UNKNOWN", "MAX_TOKENS"})
+
+    def test_hormones_do_not_saturate_on_repeated_success(self):
+        model = self.new_model()
+        model.train_sequences(["кот видит ключ ."] * 30)
+        self.assertLess(model.hormones.dopamine, 0.95)
+        self.assertGreater(model.hormones.dopamine, 0.50)
+
+    def test_coherence_uses_history_not_only_last_step(self):
+        model = self.new_model()
+        model._update_coherence(error=1.0, loop_score=1.0)
+        model._update_coherence(error=0.0, loop_score=0.0)
+        self.assertLess(model.coherence, 1.0)
+
+    def test_auto_consolidation_moves_supported_records(self):
+        model = HDCCognitiveSystem(
+            dimension=512,
+            seed="auto",
+            stm_capacity=4,
+            ltm_capacity=16,
+            promotion_support=2,
+            auto_consolidate=True,
+        )
+        result = model.train_sequences(["кот видит ключ ."] * 4)
+        self.assertIsNotNone(result["auto_consolidation"])
+        self.assertGreater(len(model.ltm), 0)
+
+    def test_stable_key_preserves_exact_memory_after_semantic_learning(self):
+        model = self.new_model(
+            neighbor_count=5,
+            stable_key_weight=0.8,
+            dynamic_semantics=True,
+        )
+        model.train_sequences(["кот видит ключ ."] * 4)
+        before = model.predict(["кот", "видит"])
+        model.train_sequences(["кот ищет книгу .", "робот видит ключ ."] * 12)
+        after = model.predict(["кот", "видит"])
+        self.assertEqual(before.token, "ключ")
+        self.assertEqual(after.token, before.token)
 
 
 if __name__ == "__main__":
